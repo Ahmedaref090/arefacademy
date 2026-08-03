@@ -14,7 +14,15 @@ return new class extends Migration
         Schema::create('users', function (Blueprint $table) {
             $table->id();
             $table->string('name');
-            $table->string('email')->unique();
+            // Students log in with their phone number (unique).
+            $table->string('phone', 20)->unique();
+            // Email stays optional (mainly for admins).
+            $table->string('email')->nullable()->unique();
+            $table->enum('role', ['admin', 'student'])->default('student')->index();
+            // Student-only profile fields.
+            $table->string('governorate')->nullable()->index();
+            $table->enum('grade_level', ['1st_secondary', '1st_bac', '2nd_bac'])->nullable()->index();
+            $table->timestamp('phone_verified_at')->nullable();
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
             $table->rememberToken();
@@ -22,7 +30,7 @@ return new class extends Migration
         });
 
         Schema::create('password_reset_tokens', function (Blueprint $table) {
-            $table->string('email')->primary();
+            $table->string('phone')->primary();
             $table->string('token');
             $table->timestamp('created_at')->nullable();
         });
