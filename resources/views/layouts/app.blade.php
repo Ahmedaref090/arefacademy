@@ -18,6 +18,7 @@
 </head>
 <body class="min-h-screen bg-gray-100 text-gray-900 antialiased dark:bg-gray-950 dark:text-gray-100">
 @php($u = auth()->user())
+@php($notifications = $notifications ?? collect())
 <div class="flex min-h-screen">
 
     {{-- Sidebar --}}
@@ -69,18 +70,7 @@
             <span class="hidden text-sm text-gray-400 md:block">@yield('title', 'Aref Academy')</span>
 
             <div class="flex items-center gap-2">
-                @if($u && ! $u->isAdmin())
-                    @php
-                        $notifications = collect();
-                        foreach ($u->payments()->with('course')->where('status', \App\Enums\PaymentStatus::Paid)->latest('paid_at')->limit(3)->get() as $p) {
-                            $notifications->push(['icon' => '💳', 'text' => 'Payment confirmed — "' . $p->course->title . '" is unlocked', 'url' => route('courses.show', $p->course), 'time' => $p->paid_at]);
-                        }
-                        foreach ($u->submissions()->with('assignment')->whereNotNull('graded_at')->latest('graded_at')->limit(3)->get() as $s) {
-                            $notifications->push(['icon' => '📝', 'text' => '"' . $s->assignment->title . '" graded: ' . $s->score . '/' . $s->assignment->max_score, 'url' => route('lessons.show', $s->assignment->lesson_id), 'time' => $s->graded_at]);
-                        }
-                        $notifications = $notifications->sortByDesc('time')->take(5)->values();
-                    @endphp
-
+                @if($u && $u->isStudent())
                     <div x-data="{ open: false }" class="relative">
                         <button type="button" @click="open = !open" class="btn-secondary relative" title="Notifications">
                             🔔
