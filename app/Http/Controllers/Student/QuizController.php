@@ -38,6 +38,7 @@ class QuizController extends Controller
         $answers = $data['answers'] ?? [];
         $questions = $quiz->questions()->get();
 
+        // ── Auto-grading: instantly evaluate every question ─────────
         $score = 0;
         foreach ($questions as $question) {
             $chosen = $answers[$question->id] ?? null;
@@ -49,7 +50,7 @@ class QuizController extends Controller
         $total = $questions->count();
         $passed = $total > 0 && ($score / $total * 100) >= $quiz->pass_score;
 
-        QuizAttempt::create([
+        $attempt = QuizAttempt::create([
             'quiz_id' => $quiz->id,
             'user_id' => $user->id,
             'score' => $score,
@@ -59,10 +60,21 @@ class QuizController extends Controller
             'completed_at' => now(),
         ]);
 
-        return redirect()->route('quizzes.show', $quiz)->with('result', [
-            'score' => $score,
-            'total' => $total,
-            'passed' => $passed,
-        ]);
+        // Redirect to the review page so the student immediately sees
+        // which answers were right/wrong.
+        return redirect()->route('quizzes.result', $attempt);
+    }
+
+    /**
+     * Review a finished attempt: per-question breakdown with the
+     * student's choice vs. the correct answer.
+     */
+    public function result(Request $request, QuizAttempt $attempt)
+    {
+        abort_unless($attempt->user_id === $request->user()->id, 403);
+
+        $attempt->load('quiz.lesson.course', 'quiz.questions');
+
+        return view('student.quizzes.result', compact('attempt'));
     }
 }

@@ -26,6 +26,7 @@ class RegisteredStudentController extends Controller
         $data = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'phone' => ['required', 'string', 'max:20', 'unique:users,phone'],
+            'parent_phone' => ['nullable', 'string', 'max:20'],
             'governorate' => ['required', Rule::in(config('governorates'))],
             'grade_level' => ['required', Rule::enum(GradeLevel::class)],
             'password' => ['required', 'confirmed', Password::min(8)],
@@ -34,6 +35,7 @@ class RegisteredStudentController extends Controller
         $user = User::create([
             'name' => $data['name'],
             'phone' => $data['phone'],
+            'parent_phone' => $data['parent_phone'] ?? null,
             'governorate' => $data['governorate'],
             'grade_level' => $data['grade_level'],
             'role' => UserRole::Student,

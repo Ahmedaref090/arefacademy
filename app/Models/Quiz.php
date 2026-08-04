@@ -37,4 +37,20 @@ class Quiz extends Model
             ->orderByDesc('score')
             ->first();
     }
+
+    /** Admin analytics: attempts / average score % / pass rate %. */
+    public function stats(): array
+    {
+        $attempts = $this->attempts()
+            ->selectRaw('COUNT(*) as total, AVG(CASE WHEN total_questions > 0 THEN score / total_questions * 100 END) as avg_score, SUM(CASE WHEN passed = 1 THEN 1 ELSE 0 END) as passed_count')
+            ->first();
+
+        $total = (int) ($attempts->total ?? 0);
+
+        return [
+            'attempts' => $total,
+            'avg_score' => (int) round($attempts->avg_score ?? 0),
+            'pass_rate' => $total > 0 ? (int) round(($attempts->passed_count / $total) * 100) : 0,
+        ];
+    }
 }

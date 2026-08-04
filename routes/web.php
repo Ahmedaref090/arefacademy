@@ -48,6 +48,7 @@ Route::middleware('auth')->group(function () {
 
     Route::get('quizzes/{quiz}', [Student\QuizController::class, 'show'])->name('quizzes.show');
     Route::post('quizzes/{quiz}', [Student\QuizController::class, 'submit'])->name('quizzes.submit');
+    Route::get('quiz-attempts/{attempt}', [Student\QuizController::class, 'result'])->name('quizzes.result');
 
     Route::post('assignments/{assignment}/submit', [Student\AssignmentController::class, 'store'])->name('assignments.submit');
 

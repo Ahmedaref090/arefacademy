@@ -11,13 +11,15 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 
 class User extends Authenticatable
 {
     use HasFactory, Notifiable;
 
     protected $fillable = [
-        'name', 'phone', 'email', 'role', 'governorate', 'grade_level', 'password',
+        'name', 'phone', 'parent_phone', 'email', 'avatar',
+        'role', 'governorate', 'grade_level', 'password',
     ];
 
     protected $hidden = [
@@ -113,5 +115,27 @@ class User extends Authenticatable
                 'updated_at' => now(),
             ]);
         }
+    }
+
+    /** Public avatar URL, or null when the student hasn't uploaded one. */
+    public function avatarUrl(): ?string
+    {
+        return $this->avatar ? Storage::disk('public')->url($this->avatar) : null;
+    }
+
+    /** Human-readable membership duration, e.g. "3 months". */
+    public function membershipDuration(): string
+    {
+        return $this->created_at->diffForHumans(null, true);
+    }
+
+    /** Initials for the avatar fallback circle, e.g. "AR". */
+    public function initials(): string
+    {
+        return collect(explode(' ', trim($this->name)))
+            ->filter()
+            ->take(2)
+            ->map(fn ($part) => mb_strtoupper(mb_substr($part, 0, 1)))
+            ->implode('');
     }
 }

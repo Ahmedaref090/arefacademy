@@ -2,10 +2,19 @@
 @section('title', $user->name . ' – Aref Academy')
 
 @section('content')
-<div class="mb-6">
-    <h1 class="text-2xl font-bold">{{ $user->name }}</h1>
-    <div class="mt-1 text-sm text-gray-500 dark:text-gray-400">
-        <span class="font-mono" dir="ltr">{{ $user->phone }}</span> · {{ $user->governorate }} · {{ $user->grade_level?->label() }} · joined {{ $user->created_at->format('Y-m-d') }}
+<div class="mb-6 flex items-center gap-4">
+    @if($user->avatarUrl())
+        <img src="{{ $user->avatarUrl() }}" alt="" class="h-16 w-16 rounded-full object-cover">
+    @else
+        <span class="flex h-16 w-16 items-center justify-center rounded-full bg-indigo-600 text-xl font-bold text-white">{{ $user->initials() }}</span>
+    @endif
+    <div>
+        <h1 class="text-2xl font-bold">{{ $user->name }}</h1>
+        <div class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+            <span class="font-mono" dir="ltr">{{ $user->phone }}</span>
+            @if($user->parent_phone) · 👪 <span class="font-mono" dir="ltr">{{ $user->parent_phone }}</span>@endif
+            · {{ $user->governorate }} · {{ $user->grade_level?->label() }} · joined {{ $user->created_at->format('Y-m-d') }}
+        </div>
     </div>
 </div>
 

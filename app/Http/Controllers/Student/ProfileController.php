@@ -23,15 +23,22 @@ class ProfileController extends Controller
     {
         $data = $request->validate([
             'name' => ['required', 'string', 'max:255'],
+            'parent_phone' => ['nullable', 'string', 'max:20'],
             'governorate' => ['required', Rule::in(config('governorates'))],
             'grade_level' => ['required', Rule::enum(GradeLevel::class)],
+            'avatar' => ['nullable', 'image', 'max:2048'],
             'password' => ['nullable', 'confirmed', Password::min(8)],
         ]);
 
         $user = $request->user();
         $user->name = $data['name'];
+        $user->parent_phone = $data['parent_phone'] ?? null;
         $user->governorate = $data['governorate'];
         $user->grade_level = $data['grade_level'];
+
+        if ($request->hasFile('avatar')) {
+            $user->avatar = $request->file('avatar')->store('avatars', 'public');
+        }
 
         if (! empty($data['password'])) {
             $user->password = $data['password'];

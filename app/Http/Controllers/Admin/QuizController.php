@@ -38,7 +38,11 @@ class QuizController extends Controller
     {
         $quiz->load('lesson', 'questions');
 
-        return view('admin.quizzes.edit', compact('quiz'));
+        return view('admin.quizzes.edit', [
+            'quiz' => $quiz,
+            'stats' => $quiz->stats(),
+            'recentAttempts' => $quiz->attempts()->with('user')->latest()->limit(10)->get(),
+        ]);
     }
 
     public function update(Request $request, Quiz $quiz)
@@ -74,7 +78,7 @@ class QuizController extends Controller
             'time_limit_minutes' => ['nullable', 'integer', 'min:1'],
             'questions' => ['required', 'array', 'min:1'],
             'questions.*.text' => ['required', 'string'],
-            'questions.*.options' => ['required', 'array', 'min:2'],
+            'questions.*.options' => ['required', 'array', 'min:2', 'max:4'],
             'questions.*.options.*' => ['required', 'string', 'max:255'],
             'questions.*.correct' => ['required', 'integer', 'min:0'],
         ]);

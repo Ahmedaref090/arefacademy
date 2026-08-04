@@ -8,6 +8,7 @@ use App\Models\Enrollment;
 use App\Models\Lesson;
 use App\Models\Question;
 use App\Models\Quiz;
+use App\Models\QuizAttempt;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -53,7 +54,7 @@ class QuizTest extends TestCase
         // One correct (q1 → option 1), one wrong (q2 → option 1).
         $this->actingAs($student)->post(route('quizzes.submit', $quiz), [
             'answers' => [$q1->id => 1, $q2->id => 1],
-        ])->assertRedirect(route('quizzes.show', $quiz));
+        ])->assertRedirect();
 
         $this->assertDatabaseHas('quiz_attempts', [
             'quiz_id' => $quiz->id,
@@ -109,6 +110,50 @@ class QuizTest extends TestCase
             'score' => 0,
             'passed' => false,
         ]);
+    }
+
+    public function test_student_can_review_their_own_attempt(): void
+    {
+        $student = User::factory()->create();
+        $quiz = $this->enrolledQuiz($student);
+
+        $question = Question::create([
+            'quiz_id' => $quiz->id,
+            'question_text' => '2 + 2 = ?',
+            'options' => ['3', '4'],
+            'correct_option' => 1,
+        ]);
+
+        $this->actingAs($student)->post(route('quizzes.submit', $quiz), [
+            'answers' => [$question->id => 1],
+        ]);
+
+        $attempt = QuizAttempt::where('user_id', $student->id)->first();
+
+        $this->actingAs($student)
+            ->get(route('quizzes.result', $attempt))
+            ->assertOk()
+            ->assertSee('2 + 2 = ?');
+    }
+
+    public function test_student_cannot_view_another_students_result(): void
+    {
+        $student = User::factory()->create();
+        $other = User::factory()->create();
+        $quiz = $this->enrolledQuiz($student);
+
+        Question::create([
+            'quiz_id' => $quiz->id,
+            'question_text' => '2 + 2 = ?',
+            'options' => ['3', '4'],
+            'correct_option' => 1,
+        ]);
+
+        $this->actingAs($student)->post(route('quizzes.submit', $quiz), []);
+
+        $attempt = QuizAttempt::where('user_id', $student->id)->first();
+
+        $this->actingAs($other)->get(route('quizzes.result', $attempt))->assertForbidden();
     }
 
     public function test_non_enrolled_student_cannot_submit(): void

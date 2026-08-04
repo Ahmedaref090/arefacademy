@@ -15,6 +15,10 @@
             <input class="input" id="phone" name="phone" type="tel" dir="ltr" value="{{ old('phone') }}" required placeholder="01xxxxxxxxx">
         </div>
         <div>
+            <label class="label" for="parent_phone">Parent's Phone (optional)</label>
+            <input class="input" id="parent_phone" name="parent_phone" type="tel" dir="ltr" value="{{ old('parent_phone') }}" placeholder="01xxxxxxxxx">
+        </div>
+        <div>
             <label class="label" for="governorate">Governorate</label>
             <select class="input" id="governorate" name="governorate" required>
                 <option value="">Select governorate…</option>
