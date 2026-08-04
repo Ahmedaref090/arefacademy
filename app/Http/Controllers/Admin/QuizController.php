@@ -27,6 +27,7 @@ class QuizController extends Controller
             'description' => $data['description'] ?? null,
             'pass_score' => $data['pass_score'],
             'time_limit_minutes' => $data['time_limit_minutes'] ?? null,
+            'max_attempts' => $data['max_attempts'] ?? null,
         ]);
 
         $this->syncQuestions($quiz, $data['questions']);
@@ -41,7 +42,7 @@ class QuizController extends Controller
         return view('admin.quizzes.edit', [
             'quiz' => $quiz,
             'stats' => $quiz->stats(),
-            'recentAttempts' => $quiz->attempts()->with('user')->latest()->limit(10)->get(),
+            'recentAttempts' => $quiz->attempts()->with('user')->whereNotNull('completed_at')->latest()->limit(10)->get(),
         ]);
     }
 
@@ -54,6 +55,7 @@ class QuizController extends Controller
             'description' => $data['description'] ?? null,
             'pass_score' => $data['pass_score'],
             'time_limit_minutes' => $data['time_limit_minutes'] ?? null,
+            'max_attempts' => $data['max_attempts'] ?? null,
         ]);
 
         $this->syncQuestions($quiz, $data['questions']);
@@ -76,6 +78,7 @@ class QuizController extends Controller
             'description' => ['nullable', 'string'],
             'pass_score' => ['required', 'integer', 'min:0', 'max:100'],
             'time_limit_minutes' => ['nullable', 'integer', 'min:1'],
+            'max_attempts' => ['nullable', 'integer', 'min:1'],
             'questions' => ['required', 'array', 'min:1'],
             'questions.*.text' => ['required', 'string'],
             'questions.*.options' => ['required', 'array', 'min:2', 'max:4'],

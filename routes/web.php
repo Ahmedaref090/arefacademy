@@ -47,6 +47,8 @@ Route::middleware('auth')->group(function () {
     Route::get('attachments/{attachment}/download', AttachmentDownloadController::class)->name('attachments.download');
 
     Route::get('quizzes/{quiz}', [Student\QuizController::class, 'show'])->name('quizzes.show');
+    Route::post('quizzes/{quiz}/start', [Student\QuizController::class, 'start'])->name('quizzes.start');
+    Route::post('quizzes/{quiz}/answer', [Student\QuizController::class, 'saveAnswer'])->name('quizzes.answer');
     Route::post('quizzes/{quiz}', [Student\QuizController::class, 'submit'])->name('quizzes.submit');
     Route::get('quiz-attempts/{attempt}', [Student\QuizController::class, 'result'])->name('quizzes.result');
 

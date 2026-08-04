@@ -13,14 +13,18 @@
         <label class="label" for="description">Description</label>
         <textarea class="input" id="description" name="description" rows="2">{{ old('description', $quiz->description) }}</textarea>
     </div>
-    <div class="grid grid-cols-2 gap-4">
+    <div class="grid gap-4 md:grid-cols-3">
         <div>
             <label class="label" for="pass_score">Pass Score (%)</label>
             <input class="input" id="pass_score" name="pass_score" type="number" min="0" max="100" value="{{ old('pass_score', $quiz->pass_score ?? 50) }}" required>
         </div>
         <div>
-            <label class="label" for="time_limit_minutes">Time Limit (minutes, optional)</label>
+            <label class="label" for="time_limit_minutes">Time Limit (min, optional)</label>
             <input class="input" id="time_limit_minutes" name="time_limit_minutes" type="number" min="1" value="{{ old('time_limit_minutes', $quiz->time_limit_minutes) }}">
+        </div>
+        <div>
+            <label class="label" for="max_attempts">Max Attempts (optional)</label>
+            <input class="input" id="max_attempts" name="max_attempts" type="number" min="1" value="{{ old('max_attempts', $quiz->max_attempts) }}" placeholder="Unlimited">
         </div>
     </div>
 </div>

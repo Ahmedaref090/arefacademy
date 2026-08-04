@@ -12,7 +12,8 @@ class Quiz extends Model
     use HasFactory;
 
     protected $fillable = [
-        'lesson_id', 'title', 'description', 'pass_score', 'time_limit_minutes',
+        'lesson_id', 'title', 'description', 'pass_score',
+        'time_limit_minutes', 'max_attempts',
     ];
 
     public function lesson(): BelongsTo
@@ -34,14 +35,44 @@ class Quiz extends Model
     {
         return $this->attempts()
             ->where('user_id', $user->id)
+            ->whereNotNull('completed_at')
             ->orderByDesc('score')
             ->first();
+    }
+
+    /** The student's unfinished attempt (completed_at = null), if any. */
+    public function inProgressAttemptFor(User $user): ?QuizAttempt
+    {
+        return $this->attempts()
+            ->where('user_id', $user->id)
+            ->whereNull('completed_at')
+            ->latest('started_at')
+            ->first();
+    }
+
+    /**
+     * Remaining attempts for the student.
+     * Returns null when the quiz allows unlimited attempts.
+     */
+    public function attemptsLeftFor(User $user): ?int
+    {
+        if ($this->max_attempts === null) {
+            return null;
+        }
+
+        $used = $this->attempts()
+            ->where('user_id', $user->id)
+            ->whereNotNull('completed_at')
+            ->count();
+
+        return max(0, $this->max_attempts - $used);
     }
 
     /** Admin analytics: attempts / average score % / pass rate %. */
     public function stats(): array
     {
         $attempts = $this->attempts()
+            ->whereNotNull('completed_at')
             ->selectRaw('COUNT(*) as total, AVG(CASE WHEN total_questions > 0 THEN score / total_questions * 100 END) as avg_score, SUM(CASE WHEN passed = 1 THEN 1 ELSE 0 END) as passed_count')
             ->first();
 
