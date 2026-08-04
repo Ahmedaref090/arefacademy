@@ -46,7 +46,7 @@
                     @foreach($lesson->attachments as $attachment)
                         <li class="flex items-center justify-between rounded-lg border border-gray-200 px-3 py-2 dark:border-gray-800">
                             <span>{{ $attachment->title }} <span class="text-xs text-gray-400">({{ strtoupper($attachment->file_type) }} · {{ $attachment->humanSize() }})</span></span>
-                            <a class="text-indigo-600 dark:text-indigo-400" href="{{ $attachment->downloadUrl() }}" download>Download</a>
+                            <a class="text-indigo-600 dark:text-indigo-400" href="{{ $attachment->downloadUrl() }}">Download</a>
                         </li>
                     @endforeach
                 </ul>
@@ -61,6 +61,7 @@
                     <div class="font-semibold">🧠 {{ $quiz->title }}</div>
                     <div class="text-xs text-gray-500 dark:text-gray-400">
                         {{ $quiz->questions->count() }} questions · pass at {{ $quiz->pass_score }}%
+                        @if($quiz->time_limit_minutes) · ⏱ {{ $quiz->time_limit_minutes }} min @endif
                         @if($best) · best score: <span class="font-semibold">{{ $best->percentage() }}%</span> @endif
                     </div>
                 </div>
@@ -133,4 +134,27 @@
         </ul>
     </aside>
 </div>
+
+<script>
+    // Watch-time tracking: ping the server every 30s while the tab is visible.
+    (function () {
+        const url = @json(route('lessons.progress', $lesson));
+        const token = @json(csrf_token());
+
+        setInterval(() => {
+            if (document.hidden) return;
+
+            fetch(url, {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': token,
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                },
+                body: JSON.stringify({ seconds: 30 }),
+                keepalive: true,
+            }).catch(() => {});
+        }, 30000);
+    })();
+</script>
 @endsection

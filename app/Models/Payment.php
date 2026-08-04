@@ -26,6 +26,14 @@ class Payment extends Model
         ];
     }
 
+    /**
+     * Payments are identified by merchant ref in URLs (matches {payment:merchant_ref_number}).
+     */
+    public function getRouteKeyName(): string
+    {
+        return 'merchant_ref_number';
+    }
+
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);

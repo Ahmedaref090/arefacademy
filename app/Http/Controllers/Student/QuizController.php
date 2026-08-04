@@ -28,16 +28,19 @@ class QuizController extends Controller
 
         abort_unless($user->isEnrolledIn($quiz->lesson->course) || $quiz->lesson->is_free, 403);
 
+        // Answers are nullable: the countdown timer may auto-submit
+        // the form with some (or all) questions unanswered.
         $data = $request->validate([
-            'answers' => ['required', 'array'],
+            'answers' => ['nullable', 'array'],
             'answers.*' => ['nullable', 'integer', 'min:0'],
         ]);
 
+        $answers = $data['answers'] ?? [];
         $questions = $quiz->questions()->get();
 
         $score = 0;
         foreach ($questions as $question) {
-            $chosen = $data['answers'][$question->id] ?? null;
+            $chosen = $answers[$question->id] ?? null;
             if ($chosen !== null && $question->isCorrect((int) $chosen)) {
                 $score++;
             }
@@ -52,7 +55,7 @@ class QuizController extends Controller
             'score' => $score,
             'total_questions' => $total,
             'passed' => $passed,
-            'answers' => $data['answers'],
+            'answers' => $answers,
             'completed_at' => now(),
         ]);
 

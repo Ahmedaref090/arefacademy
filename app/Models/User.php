@@ -5,14 +5,16 @@ namespace App\Models;
 use App\Enums\EnrollmentStatus;
 use App\Enums\GradeLevel;
 use App\Enums\UserRole;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\DB;
 
 class User extends Authenticatable
 {
-    use Notifiable;
+    use HasFactory, Notifiable;
 
     protected $fillable = [
         'name', 'phone', 'email', 'role', 'governorate', 'grade_level', 'password',
@@ -84,6 +86,32 @@ class User extends Authenticatable
             $this->completedLessons()->updateExistingPivot($lesson->id, ['completed_at' => now()]);
         } else {
             $this->completedLessons()->attach($lesson->id, ['completed_at' => now()]);
+        }
+    }
+
+    /**
+     * Add watch time (in seconds) to the student's activity for a lesson.
+     */
+    public function recordWatchTime(Lesson $lesson, int $seconds): void
+    {
+        $exists = DB::table('lesson_user')
+            ->where('user_id', $this->id)
+            ->where('lesson_id', $lesson->id)
+            ->exists();
+
+        if ($exists) {
+            DB::table('lesson_user')
+                ->where('user_id', $this->id)
+                ->where('lesson_id', $lesson->id)
+                ->increment('watch_seconds', $seconds, ['updated_at' => now()]);
+        } else {
+            DB::table('lesson_user')->insert([
+                'user_id' => $this->id,
+                'lesson_id' => $lesson->id,
+                'watch_seconds' => $seconds,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
         }
     }
 }

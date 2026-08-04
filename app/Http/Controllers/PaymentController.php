@@ -8,6 +8,7 @@ use App\Models\Enrollment;
 use App\Models\Payment;
 use App\Services\FawryPaymentService;
 use Illuminate\Http\Request;
+use Throwable;
 
 class PaymentController extends Controller
 {
@@ -36,7 +37,15 @@ class PaymentController extends Controller
             return redirect()->route('courses.show', $course)->with('status', 'Enrolled successfully.');
         }
 
-        $payment = $fawry->createChargeRequest($user, $course);
+        try {
+            $payment = $fawry->createChargeRequest($user, $course);
+        } catch (Throwable $e) {
+            report($e);
+
+            return back()->withErrors([
+                'payment' => 'Could not reach Fawry right now. Please try again in a moment.',
+            ]);
+        }
 
         return redirect()->route('payments.show', $payment);
     }

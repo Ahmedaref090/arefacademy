@@ -1,58 +1,92 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Aref Academy
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+A Learning Management System (LMS) for programming courses, built with Laravel, Blade, Tailwind CSS v4, and Alpine.js — with Fawry Pay integration for the Egyptian market.
 
-## About Laravel
+## Features
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+### Students
+- **Phone-based auth** — registration & login with a unique phone number (no email needed), plus governorate (27 Egyptian governorates) and grade level (1st Secondary / 1st Bac / 2nd Bac).
+- **Course catalog** — browse published courses, see price/duration/lessons, free previews.
+- **Learning environment** — video lessons (YouTube/Vimeo embed or self-hosted), downloadable resources per lesson, MCQ quizzes with optional countdown timer, assignments with file upload or pasted code.
+- **Activity tracking** — dashboard stat cards, 14-day activity chart, per-course progress bars, automatic watch-time tracking.
+- **Dark / light mode** toggle, sidebar navigation, mobile-friendly.
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+### Admin (Teacher)
+- Full CRUD for courses, lessons (video + attachments), quizzes (dynamic question builder), assignments.
+- Student management with filters (course, governorate, grade, search), per-student progress/quiz/submission overview.
+- Manual enrollment (cash sales), enrollment revocation, student password reset.
+- Payments dashboard with filters + manual "Mark Paid" (activates enrollment).
+- Assignment grading with score + feedback.
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+### Payments (Fawry)
+- `App\Services\FawryPaymentService` generates PayAtFawry charge requests & reference numbers.
+- Webhook at `/webhooks/fawry` (GET or POST, CSRF-exempt, signature-verified) handles `PAID` / `UNPAID` / `EXPIRED` / `CANCELED` / `REFUNDED` and unlocks the course automatically on `PAID`.
 
-## Learning Laravel
+## Requirements
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+- PHP 8.2+, Composer, Node 18+, MySQL 8
 
-In addition, [Laracasts](https://laracasts.com) contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+## Setup
 
-You can also watch bite-sized lessons with real-world projects on [Laravel Learn](https://laravel.com/learn), where you will be guided through building a Laravel application from scratch while learning PHP fundamentals.
+    composer install
+    cp .env.example .env          # then fill in DB + Fawry keys (below)
+    php artisan key:generate
+    npm install
+    php artisan migrate --seed
+    php artisan storage:link
+    npm run dev                   # or: npm run build
+    php artisan serve
 
-## Agentic Development
+### Environment (.env)
 
-Laravel's predictable structure and conventions make it ideal for AI coding agents like Claude Code, Cursor, and GitHub Copilot. Install [Laravel Boost](https://laravel.com/docs/ai) to supercharge your AI workflow:
+    DB_DATABASE=aref_academy
+    DB_USERNAME=...
+    DB_PASSWORD=...
 
-```bash
-composer require laravel/boost --dev
+    FAWRY_MERCHANT_CODE=your_merchant_code
+    FAWRY_SECURITY_KEY=your_security_key
+    FAWRY_BASE_URL=https://atfawry.fawrystaging.com   # production: https://www.atfawry.com
+    FAWRY_CURRENCY=EGP
+    FAWRY_EXPIRY_HOURS=72
 
-php artisan boost:install
-```
+### Default admin account (from seeder)
 
-Boost provides your agent 15+ tools and skills that help agents build Laravel applications while following best practices.
+- **Phone:** `01000000000`  **Password:** `password`  — change after first login.
 
-## Contributing
+### Fawry webhook
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+Give Fawry this callback URL in your merchant dashboard:
 
-## Code of Conduct
+    https://your-domain.com/webhooks/fawry
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+Test the full flow in the Fawry staging environment before going live, and verify
+the signature field order in `FawryPaymentService` against your integration docs.
 
-## Security Vulnerabilities
+## Testing
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+    php artisan test
 
-## License
+Feature tests cover: phone auth, admin access control, free/paid enrollment
+(Fawry API mocked via `Http::fake()`), quiz scoring, and the Fawry webhook
+(signature verification, PAID/EXPIRED handling).
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+## Security notes
+
+- Lesson **attachments** are stored on the private disk and served through an
+  authorized download route (admin / enrolled students / free previews only).
+- Uploaded **videos** are on the public disk for simplicity — move them behind
+  signed URLs or a CDN (Bunny/CloudFront) for production.
+- The Fawry webhook verifies the SHA-256 message signature before any state change.
+
+## Project structure (key paths)
+
+    app/Enums/                     UserRole, GradeLevel, EnrollmentStatus, PaymentStatus
+    app/Models/                    User, Course, Lesson, Attachment, Quiz, Question,
+                                   QuizAttempt, Assignment, Submission, Enrollment, Payment
+    app/Services/FawryPaymentService.php
+    app/Http/Controllers/Admin/    Teacher dashboard & management
+    app/Http/Controllers/Student/  Learning experience
+    app/Http/Controllers/Webhooks/FawryWebhookController.php
+    config/fawry.php               Fawry credentials (from .env)
+    config/governorates.php        Egyptian governorates list
+    resources/views/               Blade + Tailwind v4 + Alpine.js

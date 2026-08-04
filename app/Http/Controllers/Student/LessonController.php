@@ -47,4 +47,23 @@ class LessonController extends Controller
 
         return back()->with('status', 'Lesson marked as complete.');
     }
+
+    /**
+     * Watch-time heartbeat — the lesson page pings this every 30s
+     * while the tab is visible. Feeds the activity stats.
+     */
+    public function progress(Request $request, Lesson $lesson)
+    {
+        $user = $request->user();
+
+        abort_unless($user->isEnrolledIn($lesson->course) || $lesson->is_free, 403);
+
+        $data = $request->validate([
+            'seconds' => ['required', 'integer', 'min:1', 'max:300'],
+        ]);
+
+        $user->recordWatchTime($lesson, $data['seconds']);
+
+        return response()->noContent();
+    }
 }

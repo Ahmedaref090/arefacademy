@@ -66,7 +66,7 @@ class LessonController extends Controller
 
     public function destroyAttachment(Attachment $attachment)
     {
-        Storage::disk('public')->delete($attachment->file_path);
+        Storage::disk('local')->delete($attachment->file_path);
         $attachment->delete();
 
         return back()->with('status', 'Attachment deleted.');
@@ -87,12 +87,16 @@ class LessonController extends Controller
         ]);
     }
 
+    /**
+     * Attachments are stored on the PRIVATE disk — they are paid content,
+     * served only through the authorized download route.
+     */
     protected function syncAttachments(Request $request, Lesson $lesson): void
     {
         foreach ($request->file('attachments', []) as $file) {
             $lesson->attachments()->create([
                 'title' => $file->getClientOriginalName(),
-                'file_path' => $file->store('attachments', 'public'),
+                'file_path' => $file->store('attachments', 'local'),
                 'file_type' => strtolower($file->getClientOriginalExtension()),
                 'file_size' => $file->getSize(),
             ]);

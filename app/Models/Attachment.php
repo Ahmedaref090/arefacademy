@@ -4,7 +4,6 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Support\Facades\Storage;
 
 class Attachment extends Model
 {
@@ -17,9 +16,13 @@ class Attachment extends Model
         return $this->belongsTo(Lesson::class);
     }
 
+    /**
+     * Files live on the private disk and are served through an
+     * authorized download route (never a public URL).
+     */
     public function downloadUrl(): string
     {
-        return Storage::disk('public')->url($this->file_path);
+        return route('attachments.download', $this);
     }
 
     public function humanSize(): string

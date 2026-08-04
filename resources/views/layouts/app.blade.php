@@ -31,6 +31,7 @@
                 <a class="nav-link {{ request()->routeIs('admin.dashboard') ? 'nav-link-active' : '' }}" href="{{ route('admin.dashboard') }}">📊 Dashboard</a>
                 <a class="nav-link {{ request()->routeIs('admin.courses.*') ? 'nav-link-active' : '' }}" href="{{ route('admin.courses.index') }}">📚 Courses</a>
                 <a class="nav-link {{ request()->routeIs('admin.students.*') ? 'nav-link-active' : '' }}" href="{{ route('admin.students.index') }}">🎓 Students</a>
+                <a class="nav-link {{ request()->routeIs('admin.payments.*') ? 'nav-link-active' : '' }}" href="{{ route('admin.payments.index') }}">💳 Payments</a>
                 <a class="nav-link {{ request()->routeIs('admin.submissions.*') ? 'nav-link-active' : '' }}" href="{{ route('admin.submissions.index') }}">📝 Submissions</a>
             @else
                 <a class="nav-link {{ request()->routeIs('dashboard') ? 'nav-link-active' : '' }}" href="{{ route('dashboard') }}">🏠 Home</a>

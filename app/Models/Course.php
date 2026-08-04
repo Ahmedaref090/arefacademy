@@ -3,12 +3,15 @@
 namespace App\Models;
 
 use App\Enums\GradeLevel;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Course extends Model
 {
+    use HasFactory;
+
     protected $fillable = [
         'title', 'slug', 'description', 'price', 'duration_weeks',
         'thumbnail', 'grade_level', 'is_published',
@@ -21,6 +24,14 @@ class Course extends Model
             'is_published' => 'boolean',
             'grade_level' => GradeLevel::class,
         ];
+    }
+
+    /**
+     * Courses are identified by slug in URLs (matches {course:slug} bindings).
+     */
+    public function getRouteKeyName(): string
+    {
+        return 'slug';
     }
 
     public function lessons(): HasMany

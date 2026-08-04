@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin;
+use App\Http\Controllers\AttachmentDownloadController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\Auth\RegisteredStudentController;
 use App\Http\Controllers\PaymentController;
@@ -41,6 +42,9 @@ Route::middleware('auth')->group(function () {
 
     Route::get('lessons/{lesson}', [Student\LessonController::class, 'show'])->name('lessons.show');
     Route::post('lessons/{lesson}/complete', [Student\LessonController::class, 'complete'])->name('lessons.complete');
+    Route::post('lessons/{lesson}/progress', [Student\LessonController::class, 'progress'])->name('lessons.progress');
+
+    Route::get('attachments/{attachment}/download', AttachmentDownloadController::class)->name('attachments.download');
 
     Route::get('quizzes/{quiz}', [Student\QuizController::class, 'show'])->name('quizzes.show');
     Route::post('quizzes/{quiz}', [Student\QuizController::class, 'submit'])->name('quizzes.submit');
@@ -67,7 +71,14 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
 
     Route::get('students', [Admin\StudentController::class, 'index'])->name('students.index');
     Route::get('students/{user}', [Admin\StudentController::class, 'show'])->name('students.show');
+    Route::post('students/{user}/password', [Admin\StudentController::class, 'resetPassword'])->name('students.password');
 
     Route::get('submissions', [Admin\SubmissionController::class, 'index'])->name('submissions.index');
     Route::post('submissions/{submission}/grade', [Admin\SubmissionController::class, 'grade'])->name('submissions.grade');
+
+    Route::get('payments', [Admin\PaymentController::class, 'index'])->name('payments.index');
+    Route::post('payments/{payment}/mark-paid', [Admin\PaymentController::class, 'markPaid'])->name('payments.mark-paid');
+
+    Route::post('enrollments', [Admin\EnrollmentController::class, 'store'])->name('enrollments.store');
+    Route::delete('enrollments/{enrollment}', [Admin\EnrollmentController::class, 'destroy'])->name('enrollments.destroy');
 });
