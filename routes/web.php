@@ -74,6 +74,12 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::resource('lessons.assignments', Admin\AssignmentController::class)->shallow()->only(['store', 'update', 'destroy']);
     Route::delete('attachments/{attachment}', [Admin\LessonController::class, 'destroyAttachment'])->name('attachments.destroy');
 
+    // Private files (receipts, submissions, attachments) — admin only.
+    // The '.*' constraint allows slashes in the {path} parameter.
+    Route::get('files/{path}', [Admin\FileController::class, 'show'])
+        ->where('path', '.*')
+        ->name('files.show');
+
     Route::get('students', [Admin\StudentController::class, 'index'])->name('students.index');
     Route::get('students/{user}', [Admin\StudentController::class, 'show'])->name('students.show');
     Route::post('students/{user}/password', [Admin\StudentController::class, 'resetPassword'])->name('students.password');
