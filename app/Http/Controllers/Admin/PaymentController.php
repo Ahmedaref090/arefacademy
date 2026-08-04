@@ -11,18 +11,26 @@ use Illuminate\Support\Facades\DB;
 
 class PaymentController extends Controller
 {
+    /**
+     * List manual payments. Defaults to the pending review queue;
+     * the status filter can show approved/rejected or all payments.
+     */
     public function index(Request $request)
     {
+        // First visit (no query string) defaults to the pending queue;
+        // choosing "All" submits status='' which means no status filter.
+        $status = $request->has('status')
+            ? $request->string('status')->toString()
+            : PaymentStatus::Pending->value;
+
         $payments = Payment::with('user', 'course')
-            ->when($request->filled('status'), fn ($q) => $q
-                ->where('status', $request->string('status')->toString()))
+            ->when($status !== '', fn ($q) => $q->where('status', $status))
             ->when($request->filled('course'), fn ($q) => $q
                 ->where('course_id', $request->integer('course')))
             ->when($request->filled('search'), function ($q) use ($request) {
                 $term = '%' . $request->string('search')->toString() . '%';
                 $q->where(function ($s) use ($term) {
-                    $s->where('merchant_ref_number', 'like', $term)
-                        ->orWhere('fawry_reference_number', 'like', $term)
+                    $s->where('sender_details', 'like', $term)
                         ->orWhereHas('user', fn ($u) => $u
                             ->where('name', 'like', $term)
                             ->orWhere('phone', 'like', $term));
@@ -40,28 +48,8 @@ class PaymentController extends Controller
     }
 
     /**
-     * Manually mark a payment as paid (e.g. student paid in cash)
-     * and activate the linked enrollment.
-     */
-    public function markPaid(Payment $payment)
-    {
-        abort_if($payment->isPaid(), 422);
-
-        DB::transaction(function () use ($payment) {
-            $payment->update([
-                'status' => PaymentStatus::Approved,
-                'payment_method' => $payment->payment_method ?? 'CASH',
-                'paid_at' => now(),
-            ]);
-
-            $payment->enrollment?->activate();
-        });
-
-        return back()->with('status', 'Payment marked as paid — enrollment activated.');
-    }
-
-    /**
-     * Approve a pending manual payment and activate the 30-day subscription.
+     * Approve a pending manual payment and activate the student's
+     * 30-day course subscription.
      */
     public function approve(Payment $payment)
     {
@@ -74,6 +62,7 @@ class PaymentController extends Controller
                 'expires_at' => now()->addDays(30),
             ]);
 
+            // Sets the enrollment to active with expires_at = now + 30 days.
             $payment->enrollment?->activate();
         });
 
@@ -81,7 +70,8 @@ class PaymentController extends Controller
     }
 
     /**
-     * Reject a pending manual payment.
+     * Reject a pending manual payment so the student knows it failed
+     * and can submit a new receipt.
      */
     public function reject(Payment $payment)
     {

@@ -10,7 +10,6 @@ use App\Models\Enrollment;
 use App\Models\Payment;
 use App\Models\User;
 use Illuminate\Http\Request;
-use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 
 class PaymentController extends Controller
@@ -94,7 +93,6 @@ class PaymentController extends Controller
             'user_id' => $user->id,
             'course_id' => $course->id,
             'enrollment_id' => $enrollment->id,
-            'merchant_ref_number' => $this->generateMerchantRefNumber(),
             'amount' => $course->price,
             'status' => PaymentStatus::Pending,
             'payment_method' => $data['payment_method'],
@@ -102,7 +100,9 @@ class PaymentController extends Controller
             'receipt_image_path' => $receiptPath,
         ]);
 
-        return redirect()->route('payments.show', $payment);
+        return redirect()
+            ->route('payments.show', $payment)
+            ->with('status', 'تم استلام إيصالك، وهو الآن قيد المراجعة.');
     }
 
     /**
@@ -135,10 +135,5 @@ class PaymentController extends Controller
             ->where('status', PaymentStatus::Pending)
             ->latest()
             ->first();
-    }
-
-    protected function generateMerchantRefNumber(): string
-    {
-        return 'AREF-' . now()->format('Ymd') . '-' . strtoupper(Str::random(8));
     }
 }

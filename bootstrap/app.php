@@ -14,11 +14,6 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'admin' => \App\Http\Middleware\EnsureUserIsAdmin::class,
         ]);
-
-        // Fawry calls this endpoint server-to-server (no CSRF token).
-        $middleware->validateCsrfTokens(except: [
-            'webhooks/fawry',
-        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //

@@ -6,7 +6,6 @@ use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\Auth\RegisteredStudentController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\Student;
-use App\Http\Controllers\Webhooks\FawryWebhookController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -28,9 +27,6 @@ Route::middleware('guest')->group(function () {
 Route::post('logout', [AuthenticatedSessionController::class, 'destroy'])
     ->middleware('auth')
     ->name('logout');
-
-// ── Fawry webhook (server-to-server, no auth/CSRF) ────────────
-Route::match(['get', 'post'], 'webhooks/fawry', FawryWebhookController::class)->name('webhooks.fawry');
 
 // ── Student area ──────────────────────────────────────────────
 Route::middleware('auth')->group(function () {
@@ -65,7 +61,7 @@ Route::middleware('auth')->group(function () {
 
     Route::get('courses/{course:slug}/checkout', [PaymentController::class, 'checkout'])->name('payments.checkout');
     Route::post('courses/{course:slug}/pay', [PaymentController::class, 'pay'])->name('payments.pay');
-    Route::get('payments/{payment:merchant_ref_number}', [PaymentController::class, 'show'])->name('payments.show');
+    Route::get('payments/{payment}', [PaymentController::class, 'show'])->name('payments.show');
 });
 
 // ── Admin (teacher) area ──────────────────────────────────────
@@ -86,7 +82,8 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::post('submissions/{submission}/grade', [Admin\SubmissionController::class, 'grade'])->name('submissions.grade');
 
     Route::get('payments', [Admin\PaymentController::class, 'index'])->name('payments.index');
-    Route::post('payments/{payment}/mark-paid', [Admin\PaymentController::class, 'markPaid'])->name('payments.mark-paid');
+    Route::post('payments/{payment}/approve', [Admin\PaymentController::class, 'approve'])->name('payments.approve');
+    Route::post('payments/{payment}/reject', [Admin\PaymentController::class, 'reject'])->name('payments.reject');
 
     Route::post('enrollments', [Admin\EnrollmentController::class, 'store'])->name('enrollments.store');
     Route::delete('enrollments/{enrollment}', [Admin\EnrollmentController::class, 'destroy'])->name('enrollments.destroy');
