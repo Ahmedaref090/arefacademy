@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\PaymentMethod;
 use App\Enums\PaymentStatus;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
@@ -10,28 +11,21 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class Payment extends Model
 {
     protected $fillable = [
-        'user_id', 'course_id', 'enrollment_id', 'merchant_ref_number',
-        'fawry_reference_number', 'amount', 'status', 'payment_method',
-        'fawry_response', 'paid_at', 'expires_at',
+        'user_id', 'course_id', 'enrollment_id',
+        'amount', 'status', 'payment_method',
+        'sender_details', 'receipt_image_path',
+        'paid_at', 'expires_at',
     ];
 
     protected function casts(): array
     {
         return [
             'status' => PaymentStatus::class,
+            'payment_method' => PaymentMethod::class,
             'amount' => 'decimal:2',
-            'fawry_response' => 'array',
             'paid_at' => 'datetime',
             'expires_at' => 'datetime',
         ];
-    }
-
-    /**
-     * Payments are identified by merchant ref in URLs (matches {payment:merchant_ref_number}).
-     */
-    public function getRouteKeyName(): string
-    {
-        return 'merchant_ref_number';
     }
 
     public function user(): BelongsTo
@@ -49,13 +43,43 @@ class Payment extends Model
         return $this->belongsTo(Enrollment::class);
     }
 
-    public function scopePaid(Builder $query): Builder
+    public function scopeApproved(Builder $query): Builder
     {
-        return $query->where('status', PaymentStatus::Paid);
+        return $query->where('status', PaymentStatus::Approved);
     }
 
+    public function scopePending(Builder $query): Builder
+    {
+        return $query->where('status', PaymentStatus::Pending);
+    }
+
+    /**
+     * Backward-compatible alias for scopeApproved() — existing code
+     * (e.g. admin dashboard revenue stats) refers to approved payments as "paid".
+     */
+    public function scopePaid(Builder $query): Builder
+    {
+        return $query->where('status', PaymentStatus::Approved);
+    }
+
+    public function isApproved(): bool
+    {
+        return $this->status === PaymentStatus::Approved;
+    }
+
+    public function isPending(): bool
+    {
+        return $this->status === PaymentStatus::Pending;
+    }
+
+    public function isRejected(): bool
+    {
+        return $this->status === PaymentStatus::Rejected;
+    }
+
+    /** Backward-compatible alias for isApproved(). */
     public function isPaid(): bool
     {
-        return $this->status === PaymentStatus::Paid;
+        return $this->isApproved();
     }
 }

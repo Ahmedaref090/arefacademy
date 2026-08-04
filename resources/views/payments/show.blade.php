@@ -1,38 +1,56 @@
 @extends('layouts.app')
-@section('title', 'Payment – Aref Academy')
+@section('title', 'حالة الدفع – Aref Academy')
 
 @section('content')
-<h1 class="mb-6 text-2xl font-bold">Payment Details</h1>
+<div class="mx-auto max-w-xl" dir="rtl">
+    <h1 class="mb-6 text-2xl font-bold">حالة الدفع</h1>
 
-<div class="card max-w-xl space-y-4">
-    <div class="flex items-center justify-between">
-        <span class="font-semibold">{{ $payment->course->title }}</span>
-        <span class="badge {{ $payment->isPaid() ? 'bg-green-100 text-green-700 dark:bg-green-500/10 dark:text-green-400' : 'bg-amber-100 text-amber-700 dark:bg-amber-500/10 dark:text-amber-400' }}">
-            {{ $payment->status->label() }}
-        </span>
-    </div>
-
-    <div class="text-sm text-gray-500 dark:text-gray-400">
-        Amount: <span class="font-mono font-bold text-gray-900 dark:text-gray-100">{{ number_format($payment->amount, 2) }} EGP</span><br>
-        Reference: <span class="font-mono">{{ $payment->merchant_ref_number }}</span><br>
-        @if($payment->expires_at) Expires: {{ $payment->expires_at->format('Y-m-d H:i') }} @endif
-    </div>
-
-    @if($payment->isPaid())
-        <div class="rounded-lg bg-green-50 p-4 text-sm text-green-700 dark:bg-green-500/10 dark:text-green-400">
-            ✅ Payment confirmed — your course is unlocked!
-        </div>
-        <a class="btn" href="{{ route('courses.show', $payment->course) }}">Go to Course</a>
-    @elseif($payment->fawry_reference_number)
-        <div class="rounded-lg bg-gray-100 p-4 text-center dark:bg-gray-800">
-            <div class="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">Pay at any Fawry outlet with this number</div>
-            <div class="mt-1 font-mono text-3xl font-bold tracking-widest text-indigo-600 dark:text-indigo-400">{{ $payment->fawry_reference_number }}</div>
-        </div>
-        <p class="text-xs text-gray-500 dark:text-gray-400">Once you pay, this page updates automatically after Fawry notifies us (usually within minutes).</p>
-    @else
-        <div class="rounded-lg bg-amber-50 p-4 text-sm text-amber-700 dark:bg-amber-500/10 dark:text-amber-400">
-            Waiting for Fawry to issue a reference number. Please refresh in a moment.
-        </div>
+    @if(session('status'))
+        <div class="card mb-4 border-emerald-500 text-sm">{{ session('status') }}</div>
     @endif
+
+    <div class="card space-y-4">
+        <div class="flex items-center justify-between gap-4">
+            <span class="font-semibold">{{ $payment->course->title }}</span>
+            <span class="font-mono font-bold">{{ number_format($payment->amount, 2) }} EGP</span>
+        </div>
+
+        <div class="flex items-center justify-between text-sm">
+            <span class="text-gray-500 dark:text-gray-400">طريقة الدفع</span>
+            <span>{{ $payment->payment_method?->label() ?? '—' }}</span>
+        </div>
+        <div class="flex items-center justify-between text-sm">
+            <span class="text-gray-500 dark:text-gray-400">الرقم / الحساب المُرسل</span>
+            <span class="font-mono" dir="ltr">{{ $payment->sender_details }}</span>
+        </div>
+        <div class="flex items-center justify-between text-sm">
+            <span class="text-gray-500 dark:text-gray-400">الحالة</span>
+            @if($payment->isPending())
+                <span class="badge bg-amber-100 text-amber-700 dark:bg-amber-500/10 dark:text-amber-400">قيد المراجعة</span>
+            @elseif($payment->isApproved())
+                <span class="badge bg-emerald-100 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400">تم القبول</span>
+            @else
+                <span class="badge bg-red-100 text-red-700 dark:bg-red-500/10 dark:text-red-400">مرفوض</span>
+            @endif
+        </div>
+
+        @if($payment->receipt_image_path)
+            <div>
+                <div class="label">الإيصال المرفق</div>
+                <a href="{{ Storage::disk('public')->url($payment->receipt_image_path) }}" target="_blank">
+                    <img src="{{ Storage::disk('public')->url($payment->receipt_image_path) }}" alt="Receipt" class="mt-1 max-h-64 rounded-lg border border-gray-200 dark:border-gray-700">
+                </a>
+            </div>
+        @endif
+
+        @if($payment->isApproved())
+            <a href="{{ route('courses.show', $payment->course) }}" class="btn block text-center">الانتقال إلى الكورس</a>
+        @elseif($payment->isRejected())
+            <p class="text-sm text-red-600">تم رفض هذا الدفع. تأكد من بيانات التحويل ثم أعد المحاولة.</p>
+            <a href="{{ route('payments.checkout', $payment->course) }}" class="btn block text-center">إعادة المحاولة</a>
+        @else
+            <p class="text-sm text-gray-500 dark:text-gray-400">سيتم مراجعة الإيصال وتفعيل اشتراكك قريبًا.</p>
+        @endif
+    </div>
 </div>
 @endsection
