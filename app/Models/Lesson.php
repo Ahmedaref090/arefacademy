@@ -78,9 +78,13 @@ class Lesson extends Model
      * Resolve the playable URL for a self-hosted video, whatever format
      * the admin typed into the video_path field:
      *
-     *  - Full URL ("https://…")            → used as-is
-     *  - "/storage/…" or "storage/…"       → already a public URL path
-     *  - "courses/videos/intro.mp4"        → public disk → /storage/courses/videos/intro.mp4
+     *  - Full URL ("https://…")          → used as-is
+     *  - "/storage/…" or "storage/…"     → already a public URL path
+     *  - "videos/v1.mp4"                 → public disk file, verified to exist,
+     *                                      served at /storage/videos/v1.mp4
+     *
+     * Returns null when video_path is empty or the file is missing from
+     * the public disk (storage/app/public).
      */
     public function videoSrc(): ?string
     {
@@ -88,14 +92,23 @@ class Lesson extends Model
             return null;
         }
 
+        // Full URL (e.g. "https://cdn.example.com/v1.mp4") — use as-is.
         if (Str::startsWith($this->video_path, ['http://', 'https://', '//'])) {
             return $this->video_path;
         }
 
+        // Already a public URL path ("/storage/…" or "storage/…").
         if (Str::startsWith($this->video_path, ['/storage/', 'storage/'])) {
-            return Str::start($this->video_path, '/');
+            return asset(Str::start($this->video_path, '/'));
         }
 
-        return Storage::disk('public')->url($this->video_path);
+        // Relative path on the public disk — e.g. "videos/v1.mp4" physically
+        // at storage/app/public/videos/v1.mp4, publicly reachable through the
+        // storage symlink at /storage/videos/v1.mp4.
+        if (Storage::disk('public')->exists($this->video_path)) {
+            return asset('storage/' . ltrim($this->video_path, '/'));
+        }
+
+        return null;
     }
 }

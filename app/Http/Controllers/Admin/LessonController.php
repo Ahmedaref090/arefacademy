@@ -24,10 +24,6 @@ class LessonController extends Controller
         $data = $this->validateLesson($request);
         $data['is_free'] = $request->boolean('is_free');
 
-        if ($request->hasFile('video')) {
-            $data['video_path'] = $request->file('video')->store('courses/videos', 'public');
-        }
-
         $lesson = $course->lessons()->create($data);
         $this->syncAttachments($request, $lesson);
 
@@ -46,11 +42,6 @@ class LessonController extends Controller
         $data = $this->validateLesson($request);
         $data['is_free'] = $request->boolean('is_free');
 
-        if ($request->hasFile('video')) {
-            $this->deleteVideo($lesson);
-            $data['video_path'] = $request->file('video')->store('courses/videos', 'public');
-        }
-
         $lesson->update($data);
         $this->syncAttachments($request, $lesson);
 
@@ -61,8 +52,8 @@ class LessonController extends Controller
     {
         $course = $lesson->course;
 
-        $this->deleteVideo($lesson);
-
+        // Note: the video file is NOT deleted — videos are placed on the
+        // server manually and may be referenced by other lessons.
         foreach ($lesson->attachments as $attachment) {
             Storage::disk('local')->delete($attachment->file_path);
         }
@@ -86,11 +77,11 @@ class LessonController extends Controller
             'title' => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
             'video_url' => ['nullable', 'url', 'max:255'],
-            // max is in kilobytes: 4194304 KB = 4 GB.
-            // NOTE: PHP's upload_max_filesize / post_max_size must also
-            // allow this, otherwise the request is rejected before
-            // validation ever runs (PostTooLargeException).
-            'video' => ['nullable', 'file', 'mimetypes:video/mp4,video/webm,video/ogg', 'max:4194304'],
+            // Videos are NOT uploaded through the app (multi-GB files break
+            // HTTP uploads). The admin places the file on the server manually
+            // (FTP/SSH) inside storage/app/public and types its path here,
+            // e.g. "videos/v1.mp4". Directory traversal (..) is rejected.
+            'video_path' => ['nullable', 'string', 'max:255', 'not_regex:/\.\./'],
             'duration_minutes' => ['nullable', 'integer', 'min:1'],
             'sort_order' => ['nullable', 'integer', 'min:0'],
             'is_free' => ['nullable', 'boolean'],
@@ -112,13 +103,6 @@ class LessonController extends Controller
                 'file_type' => strtolower($file->getClientOriginalExtension()),
                 'file_size' => $file->getSize(),
             ]);
-        }
-    }
-
-    protected function deleteVideo(Lesson $lesson): void
-    {
-        if ($lesson->video_path) {
-            Storage::disk('public')->delete($lesson->video_path);
         }
     }
 }
