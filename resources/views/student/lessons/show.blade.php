@@ -16,8 +16,12 @@
                 <div class="aspect-video">
                     <iframe src="{{ $lesson->embedUrl() }}" class="h-full w-full rounded-t-xl" allowfullscreen allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"></iframe>
                 </div>
-            @elseif($lesson->video_path)
-                <video controls class="aspect-video w-full rounded-t-xl bg-black" src="{{ Storage::disk('public')->url($lesson->video_path) }}"></video>
+            @elseif($lesson->videoSrc())
+                {{-- video_path may be a full URL, a /storage/… path, or a path
+                     relative to the public disk — videoSrc() resolves all three. --}}
+                <video controls controlsList="nodownload" preload="metadata"
+                    class="aspect-video w-full rounded-t-xl bg-black"
+                    src="{{ $lesson->videoSrc() }}"></video>
             @else
                 <div class="flex aspect-video items-center justify-center rounded-t-xl bg-gray-900 font-mono text-gray-500">// no video yet</div>
             @endif

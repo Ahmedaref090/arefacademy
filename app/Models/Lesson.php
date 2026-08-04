@@ -7,6 +7,8 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class Lesson extends Model
 {
@@ -19,7 +21,9 @@ class Lesson extends Model
 
     protected function casts(): array
     {
-        return ['is_free' => 'boolean'];
+        return [
+            'is_free' => 'boolean',
+        ];
     }
 
     public function course(): BelongsTo
@@ -49,29 +53,49 @@ class Lesson extends Model
             ->withTimestamps();
     }
 
-    public function isCompletedBy(User $user): bool
-    {
-        return $this->completedByUsers()
-            ->where('users.id', $user->id)
-            ->whereNotNull('lesson_user.completed_at')
-            ->exists();
-    }
-
-    /** Convert YouTube/Vimeo watch URLs into embeddable player URLs. */
+    /**
+     * Convert a YouTube/Vimeo watch URL into an embeddable URL.
+     * Returns null when video_url is empty or not a known provider.
+     */
     public function embedUrl(): ?string
     {
         if (! $this->video_url) {
             return null;
         }
 
-        if (preg_match('~(?:youtube\.com/(?:watch\?v=|embed/|shorts/)|youtu\.be/)([\w-]{6,})~', $this->video_url, $m)) {
+        if (preg_match('/(?:youtube\.com\/(?:watch\?v=|shorts\/)|youtu\.be\/)([\w-]{6,})/', $this->video_url, $m)) {
             return 'https://www.youtube.com/embed/' . $m[1];
         }
 
-        if (preg_match('~vimeo\.com/(\d+)~', $this->video_url, $m)) {
+        if (preg_match('/vimeo\.com\/(\d+)/', $this->video_url, $m)) {
             return 'https://player.vimeo.com/video/' . $m[1];
         }
 
-        return $this->video_url;
+        return null;
+    }
+
+    /**
+     * Resolve the playable URL for a self-hosted video, whatever format
+     * the admin typed into the video_path field:
+     *
+     *  - Full URL ("https://…")            → used as-is
+     *  - "/storage/…" or "storage/…"       → already a public URL path
+     *  - "courses/videos/intro.mp4"        → public disk → /storage/courses/videos/intro.mp4
+     */
+    public function videoSrc(): ?string
+    {
+        if (! $this->video_path) {
+            return null;
+        }
+
+        if (Str::startsWith($this->video_path, ['http://', 'https://', '//'])) {
+            return $this->video_path;
+        }
+
+        if (Str::startsWith($this->video_path, ['/storage/', 'storage/'])) {
+            return Str::start($this->video_path, '/');
+        }
+
+        return Storage::disk('public')->url($this->video_path);
     }
 }
