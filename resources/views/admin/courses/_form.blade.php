@@ -30,6 +30,13 @@
     </select>
 </div>
 <div>
+    <label class="label" for="whatsapp_group_link">WhatsApp Group Link (optional)</label>
+    <input class="input font-mono" id="whatsapp_group_link" name="whatsapp_group_link" type="url"
+        value="{{ old('whatsapp_group_link', $course->whatsapp_group_link) }}" dir="ltr"
+        placeholder="https://chat.whatsapp.com/...">
+    <p class="mt-1 text-xs text-gray-400">Only students with an active, non-expired subscription will see the join button.</p>
+</div>
+<div>
     <label class="label" for="thumbnail">Thumbnail</label>
     @if($course->thumbnail)
         <img src="{{ Storage::disk('public')->url($course->thumbnail) }}" alt="" class="mb-2 h-24 rounded-lg object-cover">

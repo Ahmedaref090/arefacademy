@@ -15,11 +15,31 @@
         <div class="font-mono text-xl font-bold text-indigo-600 dark:text-indigo-400">
             {{ (float) $course->price > 0 ? number_format($course->price, 2) . ' EGP' : 'Free' }}
         </div>
-        @if(! $enrolled)
-            <a href="{{ route('payments.checkout', $course) }}" class="btn mt-2">Enroll Now</a>
+        @if(! $hasActiveSubscription)
+            <a href="{{ route('payments.checkout', $course) }}" class="btn mt-2">
+                {{ $enrollment?->isExpired() ? 'جدد الاشتراك' : 'Enroll Now' }}
+            </a>
         @endif
     </div>
 </div>
+
+@if(session('status'))
+    <div class="card mb-6 border-indigo-500 text-sm">{{ session('status') }}</div>
+@endif
+
+@if($enrollment && $enrollment->isExpired())
+    <div class="card mb-6 border-red-500 text-sm" dir="rtl">
+        <div class="flex flex-wrap items-center justify-between gap-3">
+            <div>
+                <span class="font-semibold text-red-600 dark:text-red-400">🔒 انتهى اشتراكك في هذا الكورس.</span>
+                <span class="text-gray-500 dark:text-gray-400">
+                    انتهت صلاحية وصولك في {{ $enrollment->expires_at->format('Y-m-d') }}. جدد اشتراكك لمتابعة الدروس والاختبارات.
+                </span>
+            </div>
+            <a href="{{ route('payments.checkout', $course) }}" class="btn">جدد اشتراكك</a>
+        </div>
+    </div>
+@endif
 
 @if($pendingPayment)
     <div class="card mb-6 border-amber-500 text-sm">
@@ -31,6 +51,20 @@
     </div>
 @endif
 
+@if($hasActiveSubscription && $course->whatsapp_group_link)
+    <a href="{{ $course->whatsapp_group_link }}" target="_blank" rel="noopener noreferrer"
+        class="card mb-6 flex items-center justify-between gap-3 border-emerald-500 bg-emerald-50 transition hover:bg-emerald-100 dark:bg-emerald-500/10 dark:hover:bg-emerald-500/20">
+        <div class="flex items-center gap-3">
+            <span class="text-2xl">💬</span>
+            <div>
+                <div class="font-semibold text-emerald-700 dark:text-emerald-400">Join the WhatsApp Group</div>
+                <div class="text-xs text-emerald-600/80 dark:text-emerald-400/70">Exclusive for subscribed students — announcements &amp; support</div>
+            </div>
+        </div>
+        <span class="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white">Join →</span>
+    </a>
+@endif
+
 @if($course->description)
     <div class="card mb-6 text-sm leading-relaxed text-gray-600 dark:text-gray-300">{!! nl2br(e($course->description)) !!}</div>
 @endif
@@ -38,7 +72,7 @@
 <h2 class="mb-3 font-semibold">Course Content</h2>
 <div class="card divide-y divide-gray-200 p-0 dark:divide-gray-800">
     @forelse($course->lessons as $i => $lesson)
-        @php($locked = ! $enrolled && ! $lesson->is_free)
+        @php($locked = ! $hasActiveSubscription && ! $lesson->is_free)
         <div class="flex items-center justify-between gap-3 px-5 py-3">
             <div class="flex items-center gap-3">
                 <span class="font-mono text-xs text-gray-400">{{ str_pad($i + 1, 2, '0', STR_PAD_LEFT) }}</span>
