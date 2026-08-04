@@ -45,4 +45,4 @@
                 <ul class="space-y-2 text-sm">
                     @foreach($lesson->attachments as $attachment)
                         <li class="flex items-center justify-between rounded-lg border border-gray-200 px-3 py-2 dark:border-gray-800">
-                            <span>{{ $attachment->title }} <span class="text-xs text-gray-400">({{ strtoupper($attachment->file_type) }} · {{ $attachment->humanSize
+<span>{{ $attachment->title }} <span class="text-xs text-gray-400">({{ strtoupper($attachment->file_type) }} · {{ $attachment->humanSize }})</span></span>
