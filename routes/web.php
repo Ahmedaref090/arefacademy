@@ -52,8 +52,14 @@ Route::middleware('auth')->group(function () {
 
     Route::post('assignments/{assignment}/submit', [Student\AssignmentController::class, 'store'])->name('assignments.submit');
 
+    // ── Account section (vertical nav menu) ───────────────────
     Route::get('profile', [Student\ProfileController::class, 'edit'])->name('profile.edit');
     Route::put('profile', [Student\ProfileController::class, 'update'])->name('profile.update');
+    Route::get('account/security', [Student\AccountController::class, 'security'])->name('account.security');
+    Route::put('account/password', [Student\ProfileController::class, 'updatePassword'])->name('account.password.update');
+    Route::get('account/exams', [Student\AccountController::class, 'examResults'])->name('account.exams');
+    Route::get('account/assignments', [Student\AccountController::class, 'assignmentResults'])->name('account.assignments');
+    Route::get('account/videos', [Student\AccountController::class, 'videoViews'])->name('account.videos');
 
     Route::get('courses/{course:slug}/checkout', [PaymentController::class, 'checkout'])->name('payments.checkout');
     Route::post('courses/{course:slug}/pay', [PaymentController::class, 'pay'])->name('payments.pay');

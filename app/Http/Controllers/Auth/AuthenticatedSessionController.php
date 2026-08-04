@@ -31,6 +31,13 @@ class AuthenticatedSessionController extends Controller
 
         $user = $request->user();
 
+        // Record the login for the "Security & Login History" page.
+        $user->loginHistories()->create([
+            'session_id' => $request->session()->getId(),
+            'ip_address' => $request->ip(),
+            'user_agent' => substr((string) $request->userAgent(), 0, 500),
+        ]);
+
         return redirect()->intended(
             $user->isAdmin() ? route('admin.dashboard') : route('dashboard')
         );

@@ -39,7 +39,7 @@
                 <a class="nav-link {{ request()->routeIs('courses.my') ? 'nav-link-active' : '' }}" href="{{ route('courses.my') }}">📚 My Courses</a>
                 <a class="nav-link {{ request()->routeIs('courses.index') ? 'nav-link-active' : '' }}" href="{{ route('courses.index') }}">🛒 All Courses</a>
                 <a class="nav-link" href="#" title="Coming soon">💬 Community</a>
-                <a class="nav-link {{ request()->routeIs('profile.*') ? 'nav-link-active' : '' }}" href="{{ route('profile.edit') }}">👤 Account</a>
+                <a class="nav-link {{ request()->routeIs(['profile.*', 'account.*']) ? 'nav-link-active' : '' }}" href="{{ route('profile.edit') }}">👤 Account</a>
             @endif
         </nav>
 

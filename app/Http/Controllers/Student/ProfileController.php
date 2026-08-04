@@ -48,4 +48,20 @@ class ProfileController extends Controller
 
         return back()->with('status', 'Profile updated.');
     }
+
+    /**
+     * Dedicated password change from the Security page —
+     * requires the current password (unlike the profile form).
+     */
+    public function updatePassword(Request $request)
+    {
+        $data = $request->validate([
+            'current_password' => ['required', 'current_password'],
+            'password' => ['required', 'confirmed', Password::min(8)],
+        ]);
+
+        $request->user()->update(['password' => $data['password']]);
+
+        return back()->with('status', 'Password updated successfully.');
+    }
 }

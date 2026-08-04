@@ -1,8 +1,8 @@
-@extends('layouts.app')
-@section('title', 'Account – Aref Academy')
+@extends('layouts.account')
+@section('title', 'Profile – Aref Academy')
 
-@section('content')
-<h1 class="mb-6 text-2xl font-bold">Account Settings</h1>
+@section('account')
+<h1 class="mb-6 text-2xl font-bold">Profile</h1>
 
 <form method="POST" action="{{ route('profile.update') }}" enctype="multipart/form-data" class="card max-w-xl space-y-4">
     @csrf
@@ -12,7 +12,7 @@
         @if($user->avatarUrl())
             <img src="{{ $user->avatarUrl() }}" alt="" class="h-16 w-16 rounded-full object-cover">
         @else
-            <span class="flex h-16 w-16 items-center justify-center rounded-full bg-indigo-600 text-xl font-bold text-white">{{ $user->initials() }}</span>
+            <span class="flex h-16 w-16 items-center justify-center rounded-full bg-emerald-600 text-xl font-bold text-white">{{ $user->initials() }}</span>
         @endif
         <div class="flex-1">
             <label class="label" for="avatar">Profile Photo</label>
@@ -49,14 +49,10 @@
             @endforeach
         </select>
     </div>
-    <div>
-        <label class="label" for="password">New Password (leave blank to keep current)</label>
-        <input class="input" id="password" name="password" type="password">
-    </div>
-    <div>
-        <label class="label" for="password_confirmation">Confirm New Password</label>
-        <input class="input" id="password_confirmation" name="password_confirmation" type="password">
-    </div>
+    <p class="text-xs text-gray-400">
+        Want to change your password? Use the
+        <a class="text-emerald-600 hover:underline dark:text-emerald-400" href="{{ route('account.security') }}">Security page</a>.
+    </p>
     <button class="btn">Save Changes</button>
 </form>
 @endsection
