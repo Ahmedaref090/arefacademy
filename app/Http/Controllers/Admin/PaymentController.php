@@ -49,7 +49,7 @@ class PaymentController extends Controller
 
         DB::transaction(function () use ($payment) {
             $payment->update([
-                'status' => PaymentStatus::Paid,
+                'status' => PaymentStatus::Approved,
                 'payment_method' => $payment->payment_method ?? 'CASH',
                 'paid_at' => now(),
             ]);
@@ -58,5 +58,37 @@ class PaymentController extends Controller
         });
 
         return back()->with('status', 'Payment marked as paid — enrollment activated.');
+    }
+
+    /**
+     * Approve a pending manual payment and activate the 30-day subscription.
+     */
+    public function approve(Payment $payment)
+    {
+        abort_unless($payment->isPending(), 422);
+
+        DB::transaction(function () use ($payment) {
+            $payment->update([
+                'status' => PaymentStatus::Approved,
+                'paid_at' => now(),
+                'expires_at' => now()->addDays(30),
+            ]);
+
+            $payment->enrollment?->activate();
+        });
+
+        return back()->with('status', 'Payment approved — 30-day subscription activated.');
+    }
+
+    /**
+     * Reject a pending manual payment.
+     */
+    public function reject(Payment $payment)
+    {
+        abort_unless($payment->isPending(), 422);
+
+        $payment->update(['status' => PaymentStatus::Rejected]);
+
+        return back()->with('status', 'Payment rejected.');
     }
 }

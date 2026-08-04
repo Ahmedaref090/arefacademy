@@ -140,13 +140,19 @@
             @forelse($payments as $payment)
                 <tr class="border-b border-gray-100 dark:border-gray-800/50">
                     <td class="table-td font-medium">{{ $payment->course->title }}</td>
-                    <td class="table-td font-mono text-xs">{{ $payment->fawry_reference_number ?? $payment->merchant_ref_number }}</td>
+                    <td class="table-td font-mono text-xs">{{ $payment->fawry_reference_number ?? $payment->merchant_ref_number ?? '—' }}</td>
                     <td class="table-td font-mono">{{ number_format($payment->amount, 2) }} EGP</td>
                     <td class="table-td">
                         <span class="badge {{ $payment->isPaid() ? 'bg-green-100 text-green-700 dark:bg-green-500/10 dark:text-green-400' : 'bg-amber-100 text-amber-700 dark:bg-amber-500/10 dark:text-amber-400' }}">{{ $payment->status->label() }}</span>
                     </td>
                     <td class="table-td text-gray-400">{{ $payment->created_at->format('Y-m-d') }}</td>
-                    <td class="table-td"><a class="text-indigo-600 dark:text-indigo-400" href="{{ route('payments.show', $payment) }}">View</a></td>
+                    <td class="table-td">
+                        @if($payment->merchant_ref_number)
+                            <a class="text-indigo-600 dark:text-indigo-400" href="{{ route('payments.show', $payment->merchant_ref_number) }}">View</a>
+                        @else
+                            —
+                        @endif
+                    </td>
                 </tr>
             @empty
                 <tr><td class="table-td text-gray-400" colspan="6">No invoices yet.</td></tr>
