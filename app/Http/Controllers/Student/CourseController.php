@@ -39,13 +39,25 @@ class CourseController extends Controller
         $course->load('lessons');
 
         $user = $request->user();
-        $enrolled = $user->isEnrolledIn($course);
+
+        // Active AND non-expired — gates content access and the WhatsApp button.
+        $hasActiveSubscription = $user->hasActiveSubscriptionTo($course);
+
+        // The raw enrollment record (may be expired) — used to show the
+        // "subscription expired, renew" state on the course page.
+        $enrollment = $user->activeEnrollmentIn($course);
+
         $pendingPayment = $user->payments()
             ->where('course_id', $course->id)
             ->where('status', PaymentStatus::Pending)
             ->latest()
             ->first();
 
-        return view('student.courses.show', compact('course', 'enrolled', 'pendingPayment'));
+        return view('student.courses.show', compact(
+            'course',
+            'hasActiveSubscription',
+            'enrollment',
+            'pendingPayment'
+        ));
     }
 }
