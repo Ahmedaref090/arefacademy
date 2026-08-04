@@ -82,7 +82,8 @@ class PaymentController extends Controller
             'receipt' => ['required', 'image', 'max:5120'],
         ]);
 
-        $receiptPath = $request->file('receipt')->store('receipts', 'public');
+        // Receipts are PRIVATE — served to admins via admin.files.show.
+        $receiptPath = $request->file('receipt')->store('receipts', 'local');
 
         $enrollment = Enrollment::firstOrCreate(
             ['user_id' => $user->id, 'course_id' => $course->id],

@@ -28,7 +28,8 @@ class AssignmentController extends Controller
 
         $path = $existing?->file_path;
         if ($request->hasFile('file')) {
-            $path = $request->file('file')->store("submissions/{$assignment->id}", 'public');
+            // Submissions are PRIVATE — served to admins via admin.files.show.
+            $path = $request->file('file')->store("submissions/{$assignment->id}", 'local');
         }
 
         Submission::updateOrCreate(
