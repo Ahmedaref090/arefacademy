@@ -28,7 +28,7 @@ class AppServiceProvider extends ServiceProvider
             $notifications = collect();
 
             if ($user && $user->isStudent()) {
-                foreach ($user->payments()->with('course')->where('status', PaymentStatus::Paid)->latest('paid_at')->limit(3)->get() as $p) {
+                foreach ($user->payments()->with('course')->where('status', PaymentStatus::Approved)->latest('paid_at')->limit(3)->get() as $p) {
                     $notifications->push([
                         'icon' => '💳',
                         'text' => 'Payment confirmed — "' . $p->course->title . '" is unlocked',
