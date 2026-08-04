@@ -12,7 +12,6 @@ class Payment extends Model
 {
     protected $fillable = [
         'user_id', 'course_id', 'enrollment_id',
-        'merchant_ref_number', 'fawry_reference_number', 'fawry_response',
         'amount', 'status', 'payment_method',
         'sender_details', 'receipt_image_path',
         'paid_at', 'expires_at',
@@ -24,7 +23,6 @@ class Payment extends Model
             'status' => PaymentStatus::class,
             'payment_method' => PaymentMethod::class,
             'amount' => 'decimal:2',
-            'fawry_response' => 'array',
             'paid_at' => 'datetime',
             'expires_at' => 'datetime',
         ];
