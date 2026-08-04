@@ -8,6 +8,10 @@
     <div class="card mb-4 border-emerald-500 text-sm">{{ session('status') }}</div>
 @endif
 
+@error('rejection_reason')
+    <div class="card mb-4 border-red-500 text-sm text-red-600 dark:text-red-400">{{ $message }}</div>
+@enderror
+
 <form method="GET" class="card mb-6 flex flex-wrap items-end gap-3">
     <div>
         <label class="label" for="status">Status</label>
@@ -35,7 +39,7 @@
 </form>
 
 <div class="card overflow-x-auto p-0">
-    <table class="w-full min-w-[760px] text-sm">
+    <table class="w-full min-w-[860px] text-sm">
         <thead>
             <tr class="border-b border-gray-200 text-left text-xs uppercase text-gray-400 dark:border-gray-800">
                 <th class="px-5 py-3">Student</th>
@@ -61,7 +65,7 @@
                     <td class="px-5 py-3 font-mono" dir="ltr">{{ $payment->sender_details ?? '—' }}</td>
                     <td class="px-5 py-3">
                         @if($payment->receipt_image_path)
-                            <a href="{{ Storage::disk('public')->url($payment->receipt_image_path) }}" target="_blank" class="text-indigo-600 hover:underline dark:text-indigo-400">View</a>
+                            <a href="{{ route('admin.files.show', $payment->receipt_image_path) }}" target="_blank" class="text-indigo-600 hover:underline dark:text-indigo-400">View</a>
                         @else
                             —
                         @endif
@@ -73,17 +77,25 @@
                             <span class="badge bg-emerald-100 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400">Approved</span>
                         @else
                             <span class="badge bg-red-100 text-red-700 dark:bg-red-500/10 dark:text-red-400">Rejected</span>
+                            @if($payment->rejection_reason)
+                                <div class="mt-1 max-w-48 text-xs text-red-500 dark:text-red-400" title="{{ $payment->rejection_reason }}">
+                                    {{ Str::limit($payment->rejection_reason, 60) }}
+                                </div>
+                            @endif
                         @endif
                     </td>
                     <td class="px-5 py-3">
                         @if($payment->isPending())
-                            <div class="flex gap-2">
+                            <div class="flex flex-col gap-2">
                                 <form method="POST" action="{{ route('admin.payments.approve', $payment) }}" onsubmit="return confirm('Approve this payment and activate the 30-day subscription?')">
                                     @csrf
                                     <button class="btn">Approve</button>
                                 </form>
-                                <form method="POST" action="{{ route('admin.payments.reject', $payment) }}" onsubmit="return confirm('Reject this payment?')">
+                                <form method="POST" action="{{ route('admin.payments.reject', $payment) }}" class="flex flex-col gap-1">
                                     @csrf
+                                    <textarea name="rejection_reason" rows="2" required maxlength="500"
+                                        class="input w-44 text-xs"
+                                        placeholder="Rejection reason (shown to student)…"></textarea>
                                     <button class="btn-danger">Reject</button>
                                 </form>
                             </div>
