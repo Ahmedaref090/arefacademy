@@ -25,7 +25,7 @@ class LessonController extends Controller
         $data['is_free'] = $request->boolean('is_free');
 
         if ($request->hasFile('video')) {
-            $data['video_path'] = $request->file('video')->store('videos', 'public');
+            $data['video_path'] = $request->file('video')->store('courses/videos', 'public');
         }
 
         $lesson = $course->lessons()->create($data);
@@ -47,7 +47,8 @@ class LessonController extends Controller
         $data['is_free'] = $request->boolean('is_free');
 
         if ($request->hasFile('video')) {
-            $data['video_path'] = $request->file('video')->store('videos', 'public');
+            $this->deleteVideo($lesson);
+            $data['video_path'] = $request->file('video')->store('courses/videos', 'public');
         }
 
         $lesson->update($data);
@@ -59,6 +60,13 @@ class LessonController extends Controller
     public function destroy(Lesson $lesson)
     {
         $course = $lesson->course;
+
+        $this->deleteVideo($lesson);
+
+        foreach ($lesson->attachments as $attachment) {
+            Storage::disk('local')->delete($attachment->file_path);
+        }
+
         $lesson->delete();
 
         return redirect()->route('admin.courses.edit', $course)->with('status', 'Lesson deleted.');
@@ -78,7 +86,11 @@ class LessonController extends Controller
             'title' => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
             'video_url' => ['nullable', 'url', 'max:255'],
-            'video' => ['nullable', 'file', 'mimetypes:video/mp4,video/webm,video/ogg', 'max:512000'],
+            // max is in kilobytes: 4194304 KB = 4 GB.
+            // NOTE: PHP's upload_max_filesize / post_max_size must also
+            // allow this, otherwise the request is rejected before
+            // validation ever runs (PostTooLargeException).
+            'video' => ['nullable', 'file', 'mimetypes:video/mp4,video/webm,video/ogg', 'max:4194304'],
             'duration_minutes' => ['nullable', 'integer', 'min:1'],
             'sort_order' => ['nullable', 'integer', 'min:0'],
             'is_free' => ['nullable', 'boolean'],
@@ -100,6 +112,13 @@ class LessonController extends Controller
                 'file_type' => strtolower($file->getClientOriginalExtension()),
                 'file_size' => $file->getSize(),
             ]);
+        }
+    }
+
+    protected function deleteVideo(Lesson $lesson): void
+    {
+        if ($lesson->video_path) {
+            Storage::disk('public')->delete($lesson->video_path);
         }
     }
 }
