@@ -14,7 +14,7 @@ class Course extends Model
 
     protected $fillable = [
         'title', 'slug', 'description', 'price', 'duration_weeks',
-        'thumbnail', 'grade_level', 'is_published',
+        'thumbnail', 'grade_level', 'is_published', 'whatsapp_group_link',
     ];
 
     protected function casts(): array

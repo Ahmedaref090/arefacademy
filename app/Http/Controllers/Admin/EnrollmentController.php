@@ -11,6 +11,7 @@ class EnrollmentController extends Controller
 {
     /**
      * Manually enroll a student in a course (cash sales, scholarships...).
+     * Grants a monthly subscription: 30 days of access.
      */
     public function store(Request $request)
     {
@@ -21,10 +22,14 @@ class EnrollmentController extends Controller
 
         Enrollment::updateOrCreate(
             ['user_id' => $data['user_id'], 'course_id' => $data['course_id']],
-            ['status' => EnrollmentStatus::Active, 'enrolled_at' => now()]
+            [
+                'status' => EnrollmentStatus::Active,
+                'enrolled_at' => now(),
+                'expires_at' => now()->addDays(30),
+            ]
         );
 
-        return back()->with('status', 'Student enrolled successfully.');
+        return back()->with('status', 'Student enrolled successfully (30-day subscription).');
     }
 
     public function destroy(Enrollment $enrollment)

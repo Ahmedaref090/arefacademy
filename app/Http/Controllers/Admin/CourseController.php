@@ -83,6 +83,7 @@ class CourseController extends Controller
             'duration_weeks' => ['nullable', 'integer', 'min:1'],
             'grade_level' => ['nullable', Rule::enum(GradeLevel::class)],
             'thumbnail' => ['nullable', 'image', 'max:2048'],
+            'whatsapp_group_link' => ['nullable', 'url', 'max:255'],
             'is_published' => ['nullable', 'boolean'],
         ]);
     }

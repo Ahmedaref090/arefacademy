@@ -87,6 +87,30 @@ class User extends Authenticatable
             ->exists();
     }
 
+    /**
+     * The student's active enrollment record for a course, if any.
+     * Note: an "active" enrollment may still be expired (expires_at in the past).
+     */
+    public function activeEnrollmentIn(Course $course): ?Enrollment
+    {
+        return $this->enrollments()
+            ->where('course_id', $course->id)
+            ->where('status', EnrollmentStatus::Active)
+            ->latest('enrolled_at')
+            ->first();
+    }
+
+    /**
+     * True only when the student has an active AND non-expired subscription.
+     * Enrollments with expires_at = null never expire (free courses, legacy).
+     */
+    public function hasActiveSubscriptionTo(Course $course): bool
+    {
+        $enrollment = $this->activeEnrollmentIn($course);
+
+        return $enrollment !== null && ! $enrollment->isExpired();
+    }
+
     public function markLessonCompleted(Lesson $lesson): void
     {
         if ($this->completedLessons()->where('lesson_id', $lesson->id)->exists()) {
