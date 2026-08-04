@@ -11,11 +11,18 @@
     <input class="input font-mono" id="video_url" name="video_url" type="url" dir="ltr" value="{{ old('video_url', $lesson->video_url) }}" placeholder="https://www.youtube.com/watch?v=…">
 </div>
 <div>
-    <label class="label" for="video">…or upload a video file (mp4/webm, max 500MB)</label>
+    <label class="label" for="video_path">…or Video Path (file already on the server)</label>
     @if($lesson->video_path)
-        <p class="mb-1 text-xs text-gray-400">Current: {{ basename($lesson->video_path) }}</p>
+        <p class="mb-1 text-xs text-gray-400">Current: <span class="font-mono" dir="ltr">{{ $lesson->video_path }}</span></p>
     @endif
-    <input class="input" id="video" name="video" type="file" accept="video/*">
+    <input class="input font-mono" id="video_path" name="video_path" type="text" dir="ltr"
+        value="{{ old('video_path', $lesson->video_path) }}"
+        placeholder="courses/videos/intro.mp4">
+    <p class="mt-1 text-xs text-gray-400">
+        Large videos are not uploaded through this form. Upload the file via FTP/SSH/cPanel into
+        <span class="font-mono">storage/app/public/</span> (e.g. <span class="font-mono">storage/app/public/courses/videos/intro.mp4</span>),
+        then type its path here relative to the public disk.
+    </p>
 </div>
 <div class="grid grid-cols-2 gap-4">
     <div>
