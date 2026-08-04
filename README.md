@@ -51,7 +51,8 @@ A Learning Management System (LMS) for programming courses, built with Laravel, 
 
 ### Default admin account (from seeder)
 
-- **Phone:** `01000000000`  **Password:** `password`  — change after first login.
+- **Login:** `aref`  **Password:** `ahmedaref`  — change the password after first login.
+- Login is phone-based, so the admin's username is stored in the `phone` field.
 
 ### Fawry webhook
 

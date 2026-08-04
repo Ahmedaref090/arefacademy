@@ -10,14 +10,16 @@ class DatabaseSeeder extends Seeder
 {
     public function run(): void
     {
-        // Default admin (teacher) account — change the password after first login.
+        // Default admin (teacher) account.
+        // Login is phone-based, so the admin's login identifier lives in the
+        // "phone" field: log in at /login with  aref / ahmedaref
         User::updateOrCreate(
-            ['phone' => '01000000000'],
+            ['phone' => 'aref'],
             [
                 'name' => 'Aref (Admin)',
                 'email' => 'admin@aref.academy',
                 'role' => UserRole::Admin,
-                'password' => 'password',
+                'password' => 'ahmedaref',
             ]
         );
     }
