@@ -17,35 +17,32 @@ class AssignmentController extends Controller
 
         abort_unless($user->isEnrolledIn($assignment->lesson->course) || $assignment->lesson->is_free, 403);
 
+        // Lock: once a submission exists, the student cannot resubmit or modify it.
+        if ($assignment->submissionFor($user)) {
+            return back()->withErrors(['file' => 'You have already submitted this assignment.']);
+        }
+
         $data = $request->validate([
             'file' => ['nullable', 'file', 'max:10240'],
             'code' => ['nullable', 'string'],
         ]);
 
-        $existing = $assignment->submissionFor($user);
-
-        if (! $request->hasFile('file') && blank($data['code'] ?? null) && ! $existing) {
+        if (! $request->hasFile('file') && blank($data['code'] ?? null)) {
             return back()->withErrors(['file' => 'Upload a file or paste your code.']);
         }
 
-        $path = $existing?->file_path;
-        if ($request->hasFile('file')) {
-            // Submissions are PRIVATE — students download their own via
-            // submissions.download, admins via admin.files.show.
-            $path = $request->file('file')->store("submissions/{$assignment->id}", 'local');
-        }
+        // Submissions are PRIVATE — students download their own via
+        // submissions.download, admins via admin.files.show.
+        $path = $request->hasFile('file')
+            ? $request->file('file')->store("submissions/{$assignment->id}", 'local')
+            : null;
 
-        Submission::updateOrCreate(
-            ['assignment_id' => $assignment->id, 'user_id' => $user->id],
-            [
-                'file_path' => $path,
-                'code' => $data['code'] ?? $existing?->code,
-                // Resubmission resets grading.
-                'score' => null,
-                'feedback' => null,
-                'graded_at' => null,
-            ]
-        );
+        Submission::create([
+            'assignment_id' => $assignment->id,
+            'user_id' => $user->id,
+            'file_path' => $path,
+            'code' => $data['code'] ?? null,
+        ]);
 
         return back()->with('status', 'Assignment submitted.');
     }

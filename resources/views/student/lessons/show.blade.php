@@ -98,7 +98,8 @@
                 @endif
 
                 @if($submission)
-                    <div class="mb-4 rounded-lg border border-gray-200 p-3 text-sm dark:border-gray-800">
+                    {{-- Already submitted — show status, hide the form. --}}
+                    <div class="rounded-lg border border-gray-200 p-3 text-sm dark:border-gray-800">
                         <div class="font-medium">Your submission</div>
                         @if($submission->file_path)
                             <a class="text-indigo-600 dark:text-indigo-400" href="{{ route('submissions.download', $submission) }}">Download submitted file</a>
@@ -109,21 +110,23 @@
                         @else
                             <div class="mt-1 text-amber-500">Awaiting grading…</div>
                         @endif
+                        <div class="mt-2 text-xs text-gray-400">You have already submitted this assignment — resubmission is not allowed.</div>
                     </div>
+                @else
+                    {{-- Not yet submitted — show the upload form. --}}
+                    <form method="POST" action="{{ route('assignments.submit', $assignment) }}" enctype="multipart/form-data" class="space-y-3">
+                        @csrf
+                        <div>
+                            <label class="label">Upload file (optional)</label>
+                            <input type="file" name="file" class="input">
+                        </div>
+                        <div>
+                            <label class="label">Or paste your code</label>
+                            <textarea name="code" rows="6" class="input font-mono" placeholder="// your solution here">{{ old('code') }}</textarea>
+                        </div>
+                        <button class="btn">Submit Assignment</button>
+                    </form>
                 @endif
-
-                <form method="POST" action="{{ route('assignments.submit', $assignment) }}" enctype="multipart/form-data" class="space-y-3">
-                    @csrf
-                    <div>
-                        <label class="label">Upload file (optional)</label>
-                        <input type="file" name="file" class="input">
-                    </div>
-                    <div>
-                        <label class="label">Or paste your code</label>
-                        <textarea name="code" rows="6" class="input font-mono" placeholder="// your solution here">{{ old('code', $submission->code ?? '') }}</textarea>
-                    </div>
-                    <button class="btn">{{ $submission ? 'Resubmit' : 'Submit Assignment' }}</button>
-                </form>
             </div>
         @endforeach
 
