@@ -12,8 +12,9 @@ use Illuminate\Support\Facades\DB;
 class PaymentController extends Controller
 {
     /**
-     * List manual payments. Defaults to the pending review queue;
-     * the status filter can show approved/rejected or all payments.
+     * List manual payments. Defaults to the pending review queue.
+     * The status filter can show a single status, all payments, or the
+     * "history" log (approved + rejected transactions).
      */
     public function index(Request $request)
     {
@@ -24,7 +25,8 @@ class PaymentController extends Controller
             : PaymentStatus::Pending->value;
 
         $payments = Payment::with('user', 'course')
-            ->when($status !== '', fn ($q) => $q->where('status', $status))
+            ->when($status === 'history', fn ($q) => $q->reviewed())
+            ->when($status !== '' && $status !== 'history', fn ($q) => $q->where('status', $status))
             ->when($request->filled('course'), fn ($q) => $q
                 ->where('course_id', $request->integer('course')))
             ->when($request->filled('search'), function ($q) use ($request) {
@@ -49,7 +51,8 @@ class PaymentController extends Controller
 
     /**
      * Approve a pending manual payment and activate the student's
-     * 30-day course subscription.
+     * 30-day course subscription. The payment record is KEPT (never
+     * deleted) — it becomes part of the payment history log.
      */
     public function approve(Payment $payment)
     {
@@ -60,6 +63,7 @@ class PaymentController extends Controller
                 'status' => PaymentStatus::Approved,
                 'paid_at' => now(),
                 'expires_at' => now()->addDays(30),
+                'reviewed_at' => now(),
             ]);
 
             // Sets the enrollment to active with expires_at = now + 30 days.
@@ -70,8 +74,9 @@ class PaymentController extends Controller
     }
 
     /**
-     * Reject a pending manual payment with a reason shown to the student,
-     * so they know what went wrong and can submit a corrected receipt.
+     * Reject a pending manual payment with a reason shown to the student.
+     * The payment record is KEPT (never deleted) — it becomes part of
+     * the payment history log.
      */
     public function reject(Request $request, Payment $payment)
     {
@@ -84,6 +89,7 @@ class PaymentController extends Controller
         $payment->update([
             'status' => PaymentStatus::Rejected,
             'rejection_reason' => $data['rejection_reason'],
+            'reviewed_at' => now(),
         ]);
 
         return back()->with('status', 'Payment rejected.');

@@ -2,7 +2,14 @@
 @section('title', 'Payments – Aref Academy')
 
 @section('content')
-<h1 class="mb-6 text-2xl font-bold">Payments</h1>
+<div class="mb-6 flex flex-wrap items-center justify-between gap-3">
+    <h1 class="text-2xl font-bold">Payments</h1>
+    <div class="flex gap-2 text-sm">
+        <a class="{{ request('status', 'pending') === 'pending' ? 'btn' : 'btn-secondary' }}" href="{{ route('admin.payments.index', ['status' => 'pending']) }}">Pending</a>
+        <a class="{{ request('status') === 'history' ? 'btn' : 'btn-secondary' }}" href="{{ route('admin.payments.index', ['status' => 'history']) }}">History</a>
+        <a class="{{ request('status') === '' ? 'btn' : 'btn-secondary' }}" href="{{ route('admin.payments.index', ['status' => '']) }}">All</a>
+    </div>
+</div>
 
 @if(session('status'))
     <div class="card mb-4 border-emerald-500 text-sm">{{ session('status') }}</div>
@@ -17,6 +24,7 @@
         <label class="label" for="status">Status</label>
         <select class="input" id="status" name="status">
             <option value="" @selected(request('status', 'pending') === '')>All</option>
+            <option value="history" @selected(request('status') === 'history')>History (reviewed)</option>
             @foreach($statuses as $status)
                 <option value="{{ $status->value }}" @selected(request('status', 'pending') === $status->value)>{{ $status->label() }}</option>
             @endforeach
@@ -39,7 +47,7 @@
 </form>
 
 <div class="card overflow-x-auto p-0">
-    <table class="w-full min-w-[860px] text-sm">
+    <table class="w-full min-w-[960px] text-sm">
         <thead>
             <tr class="border-b border-gray-200 text-left text-xs uppercase text-gray-400 dark:border-gray-800">
                 <th class="px-5 py-3">Student</th>
@@ -49,6 +57,7 @@
                 <th class="px-5 py-3">Sender</th>
                 <th class="px-5 py-3">Receipt</th>
                 <th class="px-5 py-3">Status</th>
+                <th class="px-5 py-3">Reviewed</th>
                 <th class="px-5 py-3"></th>
             </tr>
         </thead>
@@ -84,6 +93,13 @@
                             @endif
                         @endif
                     </td>
+                    <td class="px-5 py-3 text-xs text-gray-400">
+                        @if($payment->reviewed_at)
+                            {{ $payment->reviewed_at->format('Y-m-d H:i') }}
+                        @else
+                            —
+                        @endif
+                    </td>
                     <td class="px-5 py-3">
                         @if($payment->isPending())
                             <div class="flex flex-col gap-2">
@@ -103,7 +119,7 @@
                     </td>
                 </tr>
             @empty
-                <tr><td colspan="8" class="px-5 py-4 text-center text-gray-400">No payments found.</td></tr>
+                <tr><td colspan="9" class="px-5 py-4 text-center text-gray-400">No payments found.</td></tr>
             @endforelse
         </tbody>
     </table>

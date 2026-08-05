@@ -14,7 +14,7 @@ class Payment extends Model
         'user_id', 'course_id', 'enrollment_id',
         'amount', 'status', 'payment_method',
         'sender_details', 'receipt_image_path', 'rejection_reason',
-        'paid_at', 'expires_at',
+        'paid_at', 'expires_at', 'reviewed_at',
     ];
 
     protected function casts(): array
@@ -25,6 +25,7 @@ class Payment extends Model
             'amount' => 'decimal:2',
             'paid_at' => 'datetime',
             'expires_at' => 'datetime',
+            'reviewed_at' => 'datetime',
         ];
     }
 
@@ -60,6 +61,14 @@ class Payment extends Model
     public function scopePaid(Builder $query): Builder
     {
         return $query->where('status', PaymentStatus::Approved);
+    }
+
+    /**
+     * Payments that have been reviewed (approved or rejected) — the history log.
+     */
+    public function scopeReviewed(Builder $query): Builder
+    {
+        return $query->whereIn('status', [PaymentStatus::Approved, PaymentStatus::Rejected]);
     }
 
     public function isApproved(): bool
