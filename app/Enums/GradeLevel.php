@@ -11,9 +11,9 @@ enum GradeLevel: string
     public function label(): string
     {
         return match ($this) {
-            self::FirstSecondary => '1st Secondary',
-            self::FirstBac => '1st Baccalaureate',
-            self::SecondBac => '2nd Baccalaureate',
+            self::FirstSecondary => __('1st Secondary'),
+            self::FirstBac => __('1st Baccalaureate'),
+            self::SecondBac => __('2nd Baccalaureate'),
         };
     }
 }
