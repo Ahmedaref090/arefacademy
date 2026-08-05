@@ -4,6 +4,18 @@
 @section('content')
 <div class="card">
     <h1 class="mb-6 text-xl font-bold">Log in with your phone</h1>
+
+    @if($errors->any())
+        <div class="mb-4 flex items-start gap-2 rounded-lg border border-red-300 bg-red-50 p-3 text-sm text-red-700 dark:border-red-800 dark:bg-red-950/50 dark:text-red-400" role="alert">
+            <span class="mt-0.5 shrink-0">⚠️</span>
+            <ul class="list-inside list-disc">
+                @foreach($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
+
     <form method="POST" action="{{ route('login') }}" class="space-y-4">
         @csrf
         <div>
