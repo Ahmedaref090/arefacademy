@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Student;
 
 use App\Enums\EnrollmentStatus;
 use App\Enums\PaymentStatus;
+use App\Enums\PurchaseStatus;
 use App\Http\Controllers\Controller;
 use App\Models\Course;
 use Illuminate\Http\Request;
@@ -36,7 +37,7 @@ class CourseController extends Controller
     {
         abort_unless($course->is_published, 404);
 
-        $course->load('lessons');
+        $course->load(['lessons', 'months.lessons']);
 
         $user = $request->user();
 
@@ -53,11 +54,31 @@ class CourseController extends Controller
             ->latest()
             ->first();
 
+        // Months the student has already requested (pending) or been granted
+        // (approved) — these are excluded from the subscription dropdown.
+        $monthSubscriptions = $user->courseMonths()
+            ->where('course_months.course_id', $course->id)
+            ->wherePivotIn('status', [PurchaseStatus::Pending, PurchaseStatus::Approved])
+            ->get();
+
+        // Approved months unlock that month's lessons in the content list.
+        $approvedMonthIds = $monthSubscriptions
+            ->where('pivot.status', PurchaseStatus::Approved->value)
+            ->pluck('id')
+            ->all();
+
+        // Months still available for a new subscription request.
+        $availableMonths = $course->months
+            ->whereNotIn('id', $monthSubscriptions->pluck('id'))
+            ->values();
+
         return view('student.courses.show', compact(
             'course',
             'hasActiveSubscription',
             'enrollment',
-            'pendingPayment'
+            'pendingPayment',
+            'approvedMonthIds',
+            'availableMonths'
         ));
     }
 }
