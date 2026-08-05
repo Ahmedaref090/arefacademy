@@ -21,6 +21,19 @@
         <p class="mt-1 text-xs text-gray-400">Leave empty for no discount. Must be lower than the regular price.</p>
     </div>
 </div>
+<div>
+    <label class="label" for="pricing_type">Pricing Type</label>
+    <select class="input" id="pricing_type" name="pricing_type" required>
+        <option value="" disabled @selected(old('pricing_type', $course->pricing_type?->value) === null)>Select pricing type…</option>
+        @foreach($pricingTypes as $type)
+            <option value="{{ $type->value }}" @selected(old('pricing_type', $course->pricing_type?->value) === $type->value)>{{ $type->label() }}</option>
+        @endforeach
+    </select>
+    @error('pricing_type')
+        <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
+    @enderror
+    <p class="mt-1 text-xs text-gray-400">Lifetime = one-time purchase of the whole course. Per Month = the course is split into months that students subscribe to individually.</p>
+</div>
 <div class="grid grid-cols-2 gap-4">
     <div>
         <label class="label" for="duration_weeks">Duration (weeks)</label>

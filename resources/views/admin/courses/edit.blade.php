@@ -11,6 +11,44 @@
     <button class="btn">Save Changes</button>
 </form>
 
+@if($course->isPerMonth())
+    <div class="card mb-8">
+        <h2 class="mb-4 font-semibold">Months ({{ $course->months->count() }})</h2>
+
+        <form method="POST" action="{{ route('admin.courses.months.store', $course) }}" class="mb-4 flex items-end gap-3">
+            @csrf
+            <div class="flex-1">
+                <label class="label" for="month_name">Month name</label>
+                <input class="input" id="month_name" name="name" placeholder="e.g. August" required>
+            </div>
+            <div class="w-28">
+                <label class="label" for="month_sort_order">Order</label>
+                <input class="input" id="month_sort_order" name="sort_order" type="number" min="0" value="{{ $course->months->count() + 1 }}">
+            </div>
+            <button class="btn">+ Add Month</button>
+        </form>
+
+        <ul class="divide-y divide-gray-200 dark:divide-gray-800">
+            @forelse($course->months as $month)
+                <li class="flex items-center justify-between gap-3 py-3">
+                    <form method="POST" action="{{ route('admin.months.update', $month) }}" class="flex flex-1 items-center gap-3">
+                        @csrf @method('PUT')
+                        <input class="input" name="name" value="{{ $month->name }}" required>
+                        <input class="input w-24" name="sort_order" type="number" min="0" value="{{ $month->sort_order }}">
+                        <button class="btn-secondary">Save</button>
+                    </form>
+                    <form method="POST" action="{{ route('admin.months.destroy', $month) }}" onsubmit="return confirm('Delete this month? Its lessons will become unassigned.')">
+                        @csrf @method('DELETE')
+                        <button class="btn-danger">Delete</button>
+                    </form>
+                </li>
+            @empty
+                <li class="py-3 text-sm text-gray-400">No months yet. Add the months this course is divided into (e.g. August, September).</li>
+            @endforelse
+        </ul>
+    </div>
+@endif
+
 <div class="card">
     <div class="mb-4 flex items-center justify-between">
         <h2 class="font-semibold">Lessons ({{ $course->lessons->count() }})</h2>
