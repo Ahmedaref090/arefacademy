@@ -60,9 +60,13 @@ Route::middleware('auth')->group(function () {
     Route::put('profile', [Student\ProfileController::class, 'update'])->name('profile.update');
     Route::get('account/security', [Student\AccountController::class, 'security'])->name('account.security');
     Route::put('account/password', [Student\ProfileController::class, 'updatePassword'])->name('account.password.update');
+    Route::get('account/courses', [Student\ProfileController::class, 'courses'])->name('account.courses');
     Route::get('account/exams', [Student\AccountController::class, 'examResults'])->name('account.exams');
     Route::get('account/assignments', [Student\AccountController::class, 'assignmentResults'])->name('account.assignments');
     Route::get('account/videos', [Student\AccountController::class, 'videoViews'])->name('account.videos');
+
+    // ── Hybrid purchasing: purchase requests ──────────────────
+    Route::post('courses/{course:slug}/purchase', [Student\PurchaseController::class, 'store'])->name('courses.purchase');
 
     Route::get('courses/{course:slug}/checkout', [PaymentController::class, 'checkout'])->name('payments.checkout');
     Route::post('courses/{course:slug}/pay', [PaymentController::class, 'pay'])->name('payments.pay');
@@ -75,9 +79,17 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
 
     Route::resource('courses', Admin\CourseController::class)->except(['show']);
     Route::resource('courses.lessons', Admin\LessonController::class)->shallow()->except(['index', 'show']);
+    Route::resource('courses.months', Admin\CourseMonthController::class)->shallow()->only(['store', 'update', 'destroy']);
     Route::resource('lessons.quizzes', Admin\QuizController::class)->shallow()->except(['index', 'show']);
     Route::resource('lessons.assignments', Admin\AssignmentController::class)->shallow()->only(['store', 'update', 'destroy']);
     Route::delete('attachments/{attachment}', [Admin\LessonController::class, 'destroyAttachment'])->name('attachments.destroy');
+
+    // ── Subscription approval workflow ────────────────────────
+    Route::get('subscriptions', [Admin\SubscriptionController::class, 'index'])->name('subscriptions.index');
+    Route::post('subscriptions/course-requests/{id}/approve', [Admin\SubscriptionController::class, 'approveCourse'])->name('subscriptions.course.approve');
+    Route::post('subscriptions/course-requests/{id}/reject', [Admin\SubscriptionController::class, 'rejectCourse'])->name('subscriptions.course.reject');
+    Route::post('subscriptions/month-requests/{id}/approve', [Admin\SubscriptionController::class, 'approveMonth'])->name('subscriptions.month.approve');
+    Route::post('subscriptions/month-requests/{id}/reject', [Admin\SubscriptionController::class, 'rejectMonth'])->name('subscriptions.month.reject');
 
     // Private files (receipts, submissions, attachments) — admin only.
     // The '.*' constraint allows slashes in the {path} parameter.
@@ -93,9 +105,4 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::post('submissions/{submission}/grade', [Admin\SubmissionController::class, 'grade'])->name('submissions.grade');
 
     Route::get('payments', [Admin\PaymentController::class, 'index'])->name('payments.index');
-    Route::post('payments/{payment}/approve', [Admin\PaymentController::class, 'approve'])->name('payments.approve');
-    Route::post('payments/{payment}/reject', [Admin\PaymentController::class, 'reject'])->name('payments.reject');
-
-    Route::post('enrollments', [Admin\EnrollmentController::class, 'store'])->name('enrollments.store');
-    Route::delete('enrollments/{enrollment}', [Admin\EnrollmentController::class, 'destroy'])->name('enrollments.destroy');
-});
+    Route::post('payments/{payment}/approve', [Admin\PaymentController::class, 'approve'])->name('payments.approve

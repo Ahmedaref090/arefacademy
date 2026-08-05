@@ -64,4 +64,27 @@ class ProfileController extends Controller
 
         return back()->with('status', 'Password updated successfully.');
     }
+
+    /**
+     * "My Courses" tab: every course the student has interacted with.
+     * - Lifetime courses: listed with their overall purchase status.
+     * - Per-month courses: grouped by course, each month with its own status
+     *   (e.g. "Math 101: August (Approved), September (Pending)").
+     */
+    public function courses(Request $request)
+    {
+        $user = $request->user();
+
+        $lifetimePurchases = $user->purchasedCourses()
+            ->latest('course_user.created_at')
+            ->get();
+
+        $monthPurchases = $user->courseMonths()
+            ->with('course')
+            ->latest('course_month_user.created_at')
+            ->get()
+            ->groupBy('course_id');
+
+        return view('student.profile.courses', compact('lifetimePurchases', 'monthPurchases'));
+    }
 }
