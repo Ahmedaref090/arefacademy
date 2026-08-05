@@ -49,6 +49,7 @@ Route::middleware('auth')->group(function () {
     Route::get('quiz-attempts/{attempt}', [Student\QuizController::class, 'result'])->name('quizzes.result');
 
     Route::post('assignments/{assignment}/submit', [Student\AssignmentController::class, 'store'])->name('assignments.submit');
+    Route::get('submissions/{submission}/download', [Student\AssignmentController::class, 'download'])->name('submissions.download');
 
     // ── Account section (vertical nav menu) ───────────────────
     Route::get('profile', [Student\ProfileController::class, 'edit'])->name('profile.edit');

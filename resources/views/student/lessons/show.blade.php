@@ -101,7 +101,7 @@
                     <div class="mb-4 rounded-lg border border-gray-200 p-3 text-sm dark:border-gray-800">
                         <div class="font-medium">Your submission</div>
                         @if($submission->file_path)
-                            <a class="text-indigo-600 dark:text-indigo-400" href="{{ Storage::disk('public')->url($submission->file_path) }}" download>Download submitted file</a>
+                            <a class="text-indigo-600 dark:text-indigo-400" href="{{ route('submissions.download', $submission) }}">Download submitted file</a>
                         @endif
                         @if($submission->isGraded())
                             <div class="mt-1">Score: <span class="font-bold text-green-600 dark:text-green-400">{{ $submission->score }}/{{ $assignment->max_score }}</span></div>
