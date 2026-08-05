@@ -161,10 +161,51 @@ class User extends Authenticatable
         return $this->avatar ? Storage::disk('public')->url($this->avatar) : null;
     }
 
-    /** Human-readable membership duration, e.g. "3 months". */
+    /**
+     * Human-readable membership duration, e.g. "3 months" / "٣ شهور".
+     * Locale-aware: returns Arabic when the app locale is "ar".
+     */
     public function membershipDuration(): string
     {
+        $diff = $this->created_at->diff(now());
+
+        if (app()->getLocale() === 'ar') {
+            return $this->arabicDuration($diff);
+        }
+
         return $this->created_at->diffForHumans(null, true);
+    }
+
+    /**
+     * Build an Arabic human-readable duration from a DateInterval.
+     */
+    protected function arabicDuration(\DateInterval $diff): string
+    {
+        $units = [
+            'y' => ['سنة', 'سنتين', 'سنين'],
+            'm' => ['شهر', 'شهرين', 'شهور'],
+            'd' => ['يوم', 'يومين', 'أيام'],
+            'h' => ['ساعة', 'ساعتين', 'ساعات'],
+            'i' => ['دقيقة', 'دقيقتين', 'دقايق'],
+        ];
+
+        foreach ($units as $prop => [$one, $two, $many]) {
+            $value = $diff->$prop;
+            if ($value < 1) {
+                continue;
+            }
+
+            if ($value === 1) {
+                return $one;
+            }
+            if ($value === 2) {
+                return $two;
+            }
+
+            return $value . ' ' . ($value <= 10 ? $many : $one);
+        }
+
+        return 'دلوقتي';
     }
 
     /** Initials for the avatar fallback circle, e.g. "AR". */
