@@ -155,6 +155,46 @@
     </div>
 </section>
 
+{{-- Contact Us (homepage only) --}}
+<section id="contact" class="border-t border-slate-200 bg-white py-16 dark:border-slate-800 dark:bg-slate-900">
+    <div class="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
+        <div class="mb-10 text-center" data-reveal>
+            <h2 class="text-3xl font-extrabold">{{ __('Contact') }}</h2>
+            <p class="mt-2 text-slate-500 dark:text-slate-400">{{ __('Have a question? Reach out anytime.') }}</p>
+        </div>
+
+        <div class="grid gap-6 sm:grid-cols-2" data-reveal>
+            {{-- Phone --}}
+            <a href="tel:+201068014651"
+               class="group flex items-center gap-4 rounded-2xl border border-slate-200 bg-slate-50 p-6 transition hover:-translate-y-1 hover:border-brand-400 hover:shadow-lg dark:border-slate-800 dark:bg-slate-950 dark:hover:border-brand-600">
+                <span class="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-brand-600/10 text-brand-600 transition group-hover:bg-brand-600 group-hover:text-white dark:bg-gold-500/10 dark:text-gold-400 dark:group-hover:bg-gold-500 dark:group-hover:text-brand-950">
+                    <svg class="h-7 w-7" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 002.25-2.25v-1.372c0-.516-.351-.966-.852-1.091l-4.423-1.106c-.44-.11-.902.055-1.173.417l-.97 1.293c-.282.376-.769.542-1.21.38a12.035 12.035 0 01-7.143-7.143c-.162-.441.004-.928.38-1.21l1.293-.97c.363-.271.527-.734.417-1.173L6.963 3.102a1.125 1.125 0 00-1.091-.852H4.5A2.25 2.25 0 002.25 4.5v2.25z"/>
+                    </svg>
+                </span>
+                <span class="min-w-0">
+                    <span class="block text-sm font-semibold text-slate-500 dark:text-slate-400">{{ __('Phone') }}</span>
+                    <span class="block truncate font-mono text-lg font-bold text-slate-900 dark:text-white" dir="ltr">01068014651</span>
+                </span>
+            </a>
+
+            {{-- Email --}}
+            <a href="mailto:ahmedaref009988@gmail.com"
+               class="group flex items-center gap-4 rounded-2xl border border-slate-200 bg-slate-50 p-6 transition hover:-translate-y-1 hover:border-brand-400 hover:shadow-lg dark:border-slate-800 dark:bg-slate-950 dark:hover:border-brand-600">
+                <span class="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-brand-600/10 text-brand-600 transition group-hover:bg-brand-600 group-hover:text-white dark:bg-gold-500/10 dark:text-gold-400 dark:group-hover:bg-gold-500 dark:group-hover:text-brand-950">
+                    <svg class="h-7 w-7" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75"/>
+                    </svg>
+                </span>
+                <span class="min-w-0">
+                    <span class="block text-sm font-semibold text-slate-500 dark:text-slate-400">{{ __('Email') }}</span>
+                    <span class="block truncate font-mono text-sm font-bold text-slate-900 dark:text-white sm:text-base" dir="ltr">ahmedaref009988@gmail.com</span>
+                </span>
+            </a>
+        </div>
+    </div>
+</section>
+
 {{-- Floating WhatsApp button (homepage only) --}}
 <a href="https://wa.me/201068014651"
    target="_blank"
