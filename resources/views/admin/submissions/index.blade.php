@@ -24,7 +24,7 @@
 
             <div class="mb-3 space-y-1 text-sm">
                 @if($submission->file_path)
-                    <div>📎 <a class="text-indigo-600 dark:text-indigo-400" href="{{ Storage::disk('public')->url($submission->file_path) }}" download>Download submitted file</a></div>
+                    <div>📎 <a class="text-indigo-600 dark:text-indigo-400" href="{{ route('admin.files.show', $submission->file_path) }}" target="_blank">Download submitted file</a></div>
                 @endif
                 @if($submission->code)
                     <details>
