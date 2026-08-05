@@ -58,8 +58,8 @@
 
         <div class="relative pb-10" data-reveal>
             <x-landing.code-window />
-            {{-- Floating instructor card --}}
-            <div class="absolute bottom-0 end-4 flex w-56 items-center gap-3 rounded-2xl border border-slate-200 bg-white/90 p-3 shadow-xl backdrop-blur dark:border-slate-800 dark:bg-slate-900/90 sm:w-64">
+            {{-- Floating instructor card — pinned to the bottom-right corner of the code window in both LTR and RTL --}}
+            <div class="absolute -bottom-5 right-4 flex w-56 items-center gap-3 rounded-2xl border border-slate-200 bg-white/90 p-3 shadow-xl backdrop-blur dark:border-slate-800 dark:bg-slate-900/90 sm:w-64">
                 <img src="/images/instructor.png" alt="{{ __('Instructor') }}"
                      class="h-12 w-12 shrink-0 rounded-xl object-cover"
                      onerror="this.src='https://placehold.co/96x96/d32f2f/ffffff?text=A'">
