@@ -15,7 +15,7 @@ class Lesson extends Model
     use HasFactory;
 
     protected $fillable = [
-        'course_id', 'title', 'description', 'video_url', 'video_path',
+        'course_id', 'course_month_id', 'title', 'description', 'video_url', 'video_path',
         'duration_minutes', 'sort_order', 'is_free',
     ];
 
@@ -29,6 +29,15 @@ class Lesson extends Model
     public function course(): BelongsTo
     {
         return $this->belongsTo(Course::class);
+    }
+
+    /**
+     * The calendar month this lesson belongs to (per-month courses only).
+     * Null for lessons in lifetime courses.
+     */
+    public function month(): BelongsTo
+    {
+        return $this->belongsTo(CourseMonth::class, 'course_month_id');
     }
 
     public function attachments(): HasMany

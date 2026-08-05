@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Enums\EnrollmentStatus;
 use App\Enums\GradeLevel;
+use App\Enums\PurchaseStatus;
 use App\Enums\UserRole;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -86,6 +87,60 @@ class User extends Authenticatable
         return $this->belongsToMany(Lesson::class, 'lesson_user')
             ->withPivot(['watch_seconds', 'completed_at'])
             ->withTimestamps();
+    }
+
+    /**
+     * Lifetime courses this student has requested to buy.
+     * Pivot "status": pending | approved | rejected.
+     */
+    public function purchasedCourses(): BelongsToMany
+    {
+        return $this->belongsToMany(Course::class, 'course_user')
+            ->withPivot('status')
+            ->withTimestamps();
+    }
+
+    /**
+     * Individual course months this student has requested to buy.
+     * Pivot "status": pending | approved | rejected.
+     */
+    public function courseMonths(): BelongsToMany
+    {
+        return $this->belongsToMany(CourseMonth::class, 'course_month_user')
+            ->withPivot('status')
+            ->withTimestamps();
+    }
+
+    /**
+     * The student's purchase status for a lifetime course, or null
+     * when they have never requested it.
+     */
+    public function purchaseStatusForCourse(Course $course): ?PurchaseStatus
+    {
+        $purchase = $this->purchasedCourses()->where('courses.id', $course->id)->first();
+
+        return $purchase ? PurchaseStatus::from($purchase->pivot->status) : null;
+    }
+
+    /**
+     * The student's subscription status for a specific course month, or null
+     * when they have never requested it.
+     */
+    public function purchaseStatusForMonth(CourseMonth $month): ?PurchaseStatus
+    {
+        $subscription = $this->courseMonths()->where('course_months.id', $month->id)->first();
+
+        return $subscription ? PurchaseStatus::from($subscription->pivot->status) : null;
+    }
+
+    public function hasApprovedPurchaseFor(Course $course): bool
+    {
+        return $this->purchaseStatusForCourse($course) === PurchaseStatus::Approved;
+    }
+
+    public function hasApprovedPurchaseForMonth(CourseMonth $month): bool
+    {
+        return $this->purchaseStatusForMonth($month) === PurchaseStatus::Approved;
     }
 
     public function isEnrolledIn(Course $course): bool

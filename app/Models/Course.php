@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\GradeLevel;
+use App\Enums\PricingType;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -15,6 +16,7 @@ class Course extends Model
     protected $fillable = [
         'title', 'slug', 'description', 'price', 'sale_price', 'duration_weeks',
         'thumbnail', 'grade_level', 'is_published', 'whatsapp_group_link',
+        'pricing_type',
     ];
 
     protected function casts(): array
@@ -24,6 +26,7 @@ class Course extends Model
             'sale_price' => 'decimal:2',
             'is_published' => 'boolean',
             'grade_level' => GradeLevel::class,
+            'pricing_type' => PricingType::class,
         ];
     }
 
@@ -44,9 +47,27 @@ class Course extends Model
         return $this->thumbnail ? route('courses.thumbnail', $this) : null;
     }
 
+    public function isLifetime(): bool
+    {
+        return $this->pricing_type === PricingType::Lifetime;
+    }
+
+    public function isPerMonth(): bool
+    {
+        return $this->pricing_type === PricingType::PerMonth;
+    }
+
     public function lessons(): HasMany
     {
         return $this->hasMany(Lesson::class)->orderBy('sort_order');
+    }
+
+    /**
+     * Calendar months this course is divided into (per_month courses only).
+     */
+    public function months(): HasMany
+    {
+        return $this->hasMany(CourseMonth::class)->orderBy('sort_order');
     }
 
     public function enrollments(): HasMany
@@ -63,6 +84,17 @@ class Course extends Model
     {
         return $this->belongsToMany(User::class, 'enrollments')
             ->withPivot(['status', 'enrolled_at'])
+            ->withTimestamps();
+    }
+
+    /**
+     * Students who requested to buy this course as a whole (lifetime pricing).
+     * Pivot "status": pending | approved | rejected.
+     */
+    public function purchasers(): BelongsToMany
+    {
+        return $this->belongsToMany(User::class, 'course_user')
+            ->withPivot('status')
             ->withTimestamps();
     }
 

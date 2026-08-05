@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Enums\GradeLevel;
+use App\Enums\PricingType;
 use App\Http\Controllers\Controller;
 use App\Models\Course;
 use Illuminate\Http\Request;
@@ -23,6 +24,7 @@ class CourseController extends Controller
         return view('admin.courses.create', [
             'course' => new Course(),
             'grades' => GradeLevel::cases(),
+            'pricingTypes' => PricingType::cases(),
         ]);
     }
 
@@ -43,11 +45,12 @@ class CourseController extends Controller
 
     public function edit(Course $course)
     {
-        $course->load('lessons.quizzes', 'lessons.assignments');
+        $course->load('lessons.quizzes', 'lessons.assignments', 'months');
 
         return view('admin.courses.edit', [
             'course' => $course,
             'grades' => GradeLevel::cases(),
+            'pricingTypes' => PricingType::cases(),
         ]);
     }
 
@@ -81,6 +84,7 @@ class CourseController extends Controller
             'description' => ['nullable', 'string'],
             'price' => ['required', 'numeric', 'min:0'],
             'sale_price' => ['nullable', 'numeric', 'min:0', 'lt:price'],
+            'pricing_type' => ['required', Rule::enum(PricingType::class)],
             'duration_weeks' => ['nullable', 'integer', 'min:1'],
             'grade_level' => ['nullable', Rule::enum(GradeLevel::class)],
             'thumbnail' => ['nullable', 'image', 'max:2048'],

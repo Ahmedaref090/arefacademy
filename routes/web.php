@@ -105,4 +105,9 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::post('submissions/{submission}/grade', [Admin\SubmissionController::class, 'grade'])->name('submissions.grade');
 
     Route::get('payments', [Admin\PaymentController::class, 'index'])->name('payments.index');
-    Route::post('payments/{payment}/approve', [Admin\PaymentController::class, 'approve'])->name('payments.approve
+    Route::post('payments/{payment}/approve', [Admin\PaymentController::class, 'approve'])->name('payments.approve');
+    Route::post('payments/{payment}/reject', [Admin\PaymentController::class, 'reject'])->name('payments.reject');
+
+    Route::post('enrollments', [Admin\EnrollmentController::class, 'store'])->name('enrollments.store');
+    Route::delete('enrollments/{enrollment}', [Admin\EnrollmentController::class, 'destroy'])->name('enrollments.destroy');
+});
