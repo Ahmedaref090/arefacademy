@@ -6,6 +6,30 @@
     <label class="label" for="description">Description</label>
     <textarea class="input" id="description" name="description" rows="3">{{ old('description', $lesson->description) }}</textarea>
 </div>
+{{-- Month assignment — rendered ONLY for per-month courses.
+     NOTE: $course->pricing_type is a PricingType enum (cast on the model),
+     so a string comparison like $course->pricing_type === 'per_month' would
+     never match. $course->isPerMonth() is the correct check. --}}
+@if($course->isPerMonth())
+    <div>
+        <label class="label" for="course_month_id">Month</label>
+        <select class="input" id="course_month_id" name="course_month_id" required>
+            <option value="" disabled @selected(old('course_month_id', $lesson->course_month_id) === null)>Select month…</option>
+            @foreach($months as $month)
+                <option value="{{ $month->id }}" @selected((int) old('course_month_id', $lesson->course_month_id) === $month->id)>{{ $month->name }}</option>
+            @endforeach
+        </select>
+        @error('course_month_id')
+            <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
+        @enderror
+        @if($months->isEmpty())
+            <p class="mt-1 text-xs text-amber-500">
+                This course has no months yet —
+                <a class="underline" href="{{ route('admin.courses.edit', $course) }}">add months on the course edit page</a> first.
+            </p>
+        @endif
+    </div>
+@endif
 <div>
     <label class="label" for="video_url">Video URL (YouTube / Vimeo embed link)</label>
     <input class="input font-mono" id="video_url" name="video_url" type="url" dir="ltr" value="{{ old('video_url', $lesson->video_url) }}" placeholder="https://www.youtube.com/watch?v=…">
