@@ -1,4 +1,4 @@
-@extends('layouts.guest')
+@extends('layouts.landing')
 @section('title', __('Aref in Programming') . ' – ' . __('Learn programming the right way.'))
 
 @section('content')
@@ -40,10 +40,10 @@
     <div class="absolute -top-24 -start-24 -z-10 h-72 w-72 rounded-full bg-brand-400/20 blur-3xl"></div>
     <div class="absolute -bottom-24 -end-24 -z-10 h-72 w-72 rounded-full bg-gold-400/20 blur-3xl"></div>
 
-    <div class="mx-auto grid max-w-7xl items-center gap-12 px-4 py-16 sm:px-6 lg:grid-cols-2 lg:py-24">
+    <div class="mx-auto grid max-w-7xl items-center gap-12 px-4 py-16 sm:px-6 lg:grid-cols-2 lg:gap-16 lg:px-8 lg:py-24">
         <div data-reveal>
             <span class="badge bg-brand-600/10 text-brand-700 dark:bg-gold-500/10 dark:text-gold-400">⚡ {{ __('Programming learning platform') }}</span>
-            <h1 class="mt-4 text-4xl font-extrabold leading-tight tracking-tight sm:text-5xl">
+            <h1 class="mt-4 text-4xl font-extrabold leading-tight tracking-tight sm:text-5xl lg:text-6xl">
                 {{ __('Aref in Programming') }}
             </h1>
             <p class="text-gradient mt-3 text-2xl font-bold sm:text-3xl">
@@ -66,7 +66,7 @@
         <div class="relative pb-10" data-reveal>
             <x-landing.code-window />
             {{-- Floating instructor card --}}
-            <div class="absolute bottom-0 right-4 flex w-64 items-center gap-3 rounded-2xl border border-slate-200 bg-white/90 p-3 shadow-xl backdrop-blur dark:border-slate-800 dark:bg-slate-900/90">
+            <div class="absolute bottom-0 end-4 flex w-56 items-center gap-3 rounded-2xl border border-slate-200 bg-white/90 p-3 shadow-xl backdrop-blur dark:border-slate-800 dark:bg-slate-900/90 sm:w-64">
                 <img src="/images/instructor.png" alt="{{ __('Instructor') }}"
                      class="h-12 w-12 shrink-0 rounded-xl object-cover"
                      onerror="this.src='https://placehold.co/96x96/d32f2f/ffffff?text=A'">
@@ -81,7 +81,7 @@
 
 {{-- Stats --}}
 <section class="border-y border-slate-200 bg-white py-10 dark:border-slate-800 dark:bg-slate-900">
-    <div class="mx-auto grid max-w-5xl grid-cols-1 gap-6 px-4 sm:grid-cols-3 sm:px-6">
+    <div class="mx-auto grid max-w-5xl grid-cols-1 gap-6 px-4 sm:grid-cols-3 sm:px-6 lg:px-8">
         @foreach($statsData as $stat)
             <x-landing.stat :icon="$stat['icon']" :value="$stat['value']" :label="$stat['label']" />
         @endforeach
@@ -89,7 +89,7 @@
 </section>
 
 {{-- Courses (with grade-level tabs) --}}
-<section id="courses" class="mx-auto max-w-7xl px-4 py-16 sm:px-6" x-data="{ tab: 'all' }">
+<section id="courses" class="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8" x-data="{ tab: 'all' }">
     <div class="mb-8 text-center" data-reveal>
         <h2 class="text-3xl font-extrabold">{{ __('Available Courses') }}</h2>
         <p class="mt-2 text-slate-500 dark:text-slate-400">{{ __('Pick a course and start learning today.') }}</p>
@@ -121,7 +121,7 @@
 
 {{-- How it works --}}
 <section class="border-y border-slate-200 bg-white py-16 dark:border-slate-800 dark:bg-slate-900">
-    <div class="mx-auto max-w-7xl px-4 sm:px-6">
+    <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div class="mb-12 text-center" data-reveal>
             <h2 class="text-3xl font-extrabold">{{ __('How do I start on the platform?') }}</h2>
             <p class="mt-2 text-slate-500 dark:text-slate-400">{{ __('Four simple steps and you are in.') }}</p>
@@ -146,7 +146,7 @@
 </section>
 
 {{-- FAQ --}}
-<section id="faq" class="mx-auto max-w-3xl px-4 py-16 sm:px-6">
+<section id="faq" class="mx-auto max-w-3xl px-4 py-16 sm:px-6 lg:px-8">
     <div class="mb-10 text-center" data-reveal>
         <h2 class="text-3xl font-extrabold">{{ __('Frequently Asked Questions') }}</h2>
         <p class="mt-2 text-slate-500 dark:text-slate-400">{{ __('Everything you need to know before you start.') }}</p>
@@ -159,7 +159,7 @@
 </section>
 
 {{-- Final CTA --}}
-<section class="px-4 pb-16 sm:px-6">
+<section class="px-4 pb-16 sm:px-6 lg:px-8">
     <div class="relative mx-auto max-w-5xl overflow-hidden rounded-3xl bg-gradient-to-l from-brand-700 to-brand-900 px-6 py-14 text-center text-white shadow-2xl" data-reveal>
         <div class="absolute -top-16 end-0 h-48 w-48 rounded-full bg-gold-500/20 blur-3xl"></div>
         <h2 class="text-3xl font-extrabold sm:text-4xl">{{ __('Ready to start your journey?') }}</h2>
