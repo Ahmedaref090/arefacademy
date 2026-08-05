@@ -6,7 +6,12 @@
 
 <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
     @forelse($courses as $course)
-        @php($enrollment = $course->enrollments->first())
+        @php
+            $enrollment = $course->enrollments->first();
+            // A discount applies only when a sale price exists and is actually lower.
+            $hasDiscount = ! is_null($course->sale_price) && (float) $course->sale_price < (float) $course->price;
+            $effectivePrice = $hasDiscount ? (float) $course->sale_price : (float) $course->price;
+        @endphp
         <a href="{{ route('courses.show', $course) }}" class="card block hover:border-indigo-500">
             @if($course->thumbnailUrl())
                 <img src="{{ $course->thumbnailUrl() }}" alt="" class="mb-3 h-32 w-full rounded-lg object-cover">
@@ -26,8 +31,18 @@
                 @if($course->grade_level) · {{ $course->grade_level->label() }} @endif
                 @if($course->duration_weeks) · {{ $course->duration_weeks }} weeks @endif
             </div>
-            <div class="mt-2 font-mono font-bold text-indigo-600 dark:text-indigo-400">
-                {{ (float) $course->price > 0 ? number_format($course->price, 2) . ' EGP' : 'Free' }}
+            <div class="mt-2 flex flex-wrap items-baseline gap-x-2">
+                @if($hasDiscount)
+                    {{-- Original price struck through, sale price highlighted --}}
+                    <span class="font-mono text-sm text-gray-400 line-through">{{ number_format($course->price, 2) }} EGP</span>
+                    <span class="font-mono font-extrabold text-red-600 dark:text-red-400">
+                        {{ $effectivePrice > 0 ? number_format($effectivePrice, 2) . ' EGP' : 'Free' }}
+                    </span>
+                @else
+                    <span class="font-mono font-bold text-indigo-600 dark:text-indigo-400">
+                        {{ $effectivePrice > 0 ? number_format($effectivePrice, 2) . ' EGP' : 'Free' }}
+                    </span>
+                @endif
             </div>
         </a>
     @empty
