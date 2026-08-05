@@ -14,9 +14,9 @@
         @endphp
         <a href="{{ route('courses.show', $course) }}" class="card block hover:border-indigo-500">
             @if($course->thumbnailUrl())
-                <img src="{{ $course->thumbnailUrl() }}" alt="" class="mb-3 h-32 w-full rounded-lg object-cover">
+                <img src="{{ $course->thumbnailUrl() }}" alt="" class="mb-3 h-52 w-full rounded-lg object-cover">
             @else
-                <div class="mb-3 flex h-32 items-center justify-center rounded-lg bg-gray-800 font-mono text-3xl text-indigo-400">&lt;/&gt;</div>
+                <div class="mb-3 flex h-52 items-center justify-center rounded-lg bg-gray-800 font-mono text-3xl text-indigo-400">&lt;/&gt;</div>
             @endif
             <div class="mb-1 flex items-center justify-between gap-2">
                 <span class="font-semibold">{{ $course->title }}</span>
