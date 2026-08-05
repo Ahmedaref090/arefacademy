@@ -13,7 +13,7 @@ class Course extends Model
     use HasFactory;
 
     protected $fillable = [
-        'title', 'slug', 'description', 'price', 'duration_weeks',
+        'title', 'slug', 'description', 'price', 'sale_price', 'duration_weeks',
         'thumbnail', 'grade_level', 'is_published', 'whatsapp_group_link',
     ];
 
@@ -21,6 +21,7 @@ class Course extends Model
     {
         return [
             'price' => 'decimal:2',
+            'sale_price' => 'decimal:2',
             'is_published' => 'boolean',
             'grade_level' => GradeLevel::class,
         ];

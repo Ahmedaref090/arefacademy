@@ -80,6 +80,7 @@ class CourseController extends Controller
             'slug' => ['nullable', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
             'price' => ['required', 'numeric', 'min:0'],
+            'sale_price' => ['nullable', 'numeric', 'min:0', 'lt:price'],
             'duration_weeks' => ['nullable', 'integer', 'min:1'],
             'grade_level' => ['nullable', Rule::enum(GradeLevel::class)],
             'thumbnail' => ['nullable', 'image', 'max:2048'],

@@ -1,5 +1,11 @@
 @props(['course', 'gradeKey' => 'general'])
 
+@php
+    // A discount applies only when a sale price exists and is actually lower.
+    $hasDiscount = ! is_null($course->sale_price) && (float) $course->sale_price < (float) $course->price;
+    $effectivePrice = $hasDiscount ? (float) $course->sale_price : (float) $course->price;
+@endphp
+
 {{-- Must be rendered inside an Alpine scope providing `tab` (see the courses section in welcome.blade.php). --}}
 <a href="{{ route('login') }}"
    x-show="tab === 'all' || tab === '{{ $gradeKey }}'"
@@ -18,9 +24,19 @@
         <h3 class="font-bold">{{ $course->title }}</h3>
         <p class="mt-1 line-clamp-2 text-sm text-slate-500 dark:text-slate-400">{{ $course->description }}</p>
         <div class="mt-4 flex items-center justify-between">
-            <span class="font-mono font-bold text-brand-600 dark:text-gold-400">
-                {{ (float) $course->price > 0 ? number_format($course->price, 2) . ' ' . __('EGP') : __('Free') }}
-            </span>
+            <div class="flex flex-wrap items-baseline gap-x-2">
+                @if($hasDiscount)
+                    {{-- Original price struck through, sale price highlighted --}}
+                    <span class="font-mono text-sm text-slate-400 line-through">{{ number_format($course->price, 2) }} {{ __('EGP') }}</span>
+                    <span class="font-mono text-lg font-extrabold text-red-600 dark:text-red-400">
+                        {{ $effectivePrice > 0 ? number_format($effectivePrice, 2) . ' ' . __('EGP') : __('Free') }}
+                    </span>
+                @else
+                    <span class="font-mono font-bold text-brand-600 dark:text-gold-400">
+                        {{ $effectivePrice > 0 ? number_format($effectivePrice, 2) . ' ' . __('EGP') : __('Free') }}
+                    </span>
+                @endif
+            </div>
             <span class="rounded-lg bg-brand-600 px-3 py-1.5 text-xs font-semibold text-white transition group-hover:bg-brand-700">{{ __('Subscribe') }}</span>
         </div>
     </div>
