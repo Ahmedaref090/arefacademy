@@ -8,8 +8,8 @@
    x-transition:enter-end="opacity-100 scale-100"
    class="group overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-xl dark:border-slate-800 dark:bg-slate-900">
     <div class="aspect-video w-full overflow-hidden bg-slate-100 dark:bg-slate-800">
-        @if($course->thumbnail)
-            <img src="{{ Storage::disk('public')->url($course->thumbnail) }}" alt="{{ $course->title }}" class="h-full w-full object-cover transition duration-500 group-hover:scale-105">
+        @if($course->thumbnailUrl())
+            <img src="{{ $course->thumbnailUrl() }}" alt="{{ $course->title }}" class="h-full w-full object-cover transition duration-500 group-hover:scale-105">
         @else
             <div class="flex h-full items-center justify-center font-mono text-4xl text-brand-300 dark:text-brand-700">&lt;/&gt;</div>
         @endif

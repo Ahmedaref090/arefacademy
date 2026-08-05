@@ -4,6 +4,7 @@ use App\Http\Controllers\Admin;
 use App\Http\Controllers\AttachmentDownloadController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\Auth\RegisteredStudentController;
+use App\Http\Controllers\CourseThumbnailController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\LocaleController;
 use App\Http\Controllers\PaymentController;
@@ -12,6 +13,9 @@ use Illuminate\Support\Facades\Route;
 
 // ── Public landing page ───────────────────────────────────────
 Route::get('/', HomeController::class)->name('home');
+
+// ── Course thumbnails (streamed from the private disk) ────────
+Route::get('courses/{course}/thumbnail', CourseThumbnailController::class)->name('courses.thumbnail');
 
 // ── Locale switcher (ar default, en optional) ─────────────────
 Route::get('locale/{locale}', LocaleController::class)->name('locale.switch');

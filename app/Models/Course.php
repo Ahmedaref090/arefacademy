@@ -34,6 +34,15 @@ class Course extends Model
         return 'slug';
     }
 
+    /**
+     * Public URL for the course thumbnail, streamed from the private disk
+     * via the courses.thumbnail route. Null when no thumbnail is set.
+     */
+    public function thumbnailUrl(): ?string
+    {
+        return $this->thumbnail ? route('courses.thumbnail', $this) : null;
+    }
+
     public function lessons(): HasMany
     {
         return $this->hasMany(Lesson::class)->orderBy('sort_order');
