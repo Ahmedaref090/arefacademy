@@ -68,6 +68,9 @@ Route::middleware('auth')->group(function () {
     // ── Hybrid purchasing: purchase requests ──────────────────
     Route::post('courses/{course:slug}/purchase', [Student\PurchaseController::class, 'store'])->name('courses.purchase');
 
+    // ── Month subscription requests (per-month courses) ───────
+    Route::post('enrollments', [Student\EnrollmentController::class, 'store'])->name('enrollments.store');
+
     Route::get('courses/{course:slug}/checkout', [PaymentController::class, 'checkout'])->name('payments.checkout');
     Route::post('courses/{course:slug}/pay', [PaymentController::class, 'pay'])->name('payments.pay');
     Route::get('payments/{payment}', [PaymentController::class, 'show'])->name('payments.show');
