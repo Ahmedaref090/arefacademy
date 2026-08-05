@@ -70,14 +70,21 @@ class PaymentController extends Controller
     }
 
     /**
-     * Reject a pending manual payment so the student knows it failed
-     * and can submit a new receipt.
+     * Reject a pending manual payment with a reason shown to the student,
+     * so they know what went wrong and can submit a corrected receipt.
      */
-    public function reject(Payment $payment)
+    public function reject(Request $request, Payment $payment)
     {
         abort_unless($payment->isPending(), 422);
 
-        $payment->update(['status' => PaymentStatus::Rejected]);
+        $data = $request->validate([
+            'rejection_reason' => ['required', 'string', 'max:500'],
+        ]);
+
+        $payment->update([
+            'status' => PaymentStatus::Rejected,
+            'rejection_reason' => $data['rejection_reason'],
+        ]);
 
         return back()->with('status', 'Payment rejected.');
     }

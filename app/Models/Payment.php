@@ -13,7 +13,7 @@ class Payment extends Model
     protected $fillable = [
         'user_id', 'course_id', 'enrollment_id',
         'amount', 'status', 'payment_method',
-        'sender_details', 'receipt_image_path',
+        'sender_details', 'receipt_image_path', 'rejection_reason',
         'paid_at', 'expires_at',
     ];
 
