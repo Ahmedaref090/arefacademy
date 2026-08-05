@@ -19,13 +19,6 @@
     $grouped = $courses->groupBy($gradeKey);
     $showTabs = $courses->isNotEmpty() && $grouped->keys()->contains(fn ($k) => $k !== 'general');
 
-    // Stats are computed (and cached) in HomeController.
-    $statsData = [
-        ['icon' => '🎓', 'value' => $stats['students'] ?? 0, 'label' => __('Students on the platform')],
-        ['icon' => '📚', 'value' => $stats['courses'] ?? $courses->count(), 'label' => __('Courses')],
-        ['icon' => '🚀', 'value' => $stats['enrollments'] ?? 0, 'label' => __('Enrollments')],
-    ];
-
     $faqs = [
         ['q' => __('Is the content explained in Arabic?'), 'a' => __('Yes, all lessons are explained in simple Arabic with practical examples and real projects.')],
         ['q' => __('How do I subscribe to a course?'), 'a' => __('Create your account, choose the course, send the payment, and your subscription will be activated right after review.')],
@@ -76,15 +69,6 @@
                 </div>
             </div>
         </div>
-    </div>
-</section>
-
-{{-- Stats --}}
-<section class="border-y border-slate-200 bg-white py-10 dark:border-slate-800 dark:bg-slate-900">
-    <div class="mx-auto grid max-w-5xl grid-cols-1 gap-6 px-4 sm:grid-cols-3 sm:px-6 lg:px-8">
-        @foreach($statsData as $stat)
-            <x-landing.stat :icon="$stat['icon']" :value="$stat['value']" :label="$stat['label']" />
-        @endforeach
     </div>
 </section>
 
