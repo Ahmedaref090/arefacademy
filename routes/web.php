@@ -4,17 +4,17 @@ use App\Http\Controllers\Admin;
 use App\Http\Controllers\AttachmentDownloadController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\Auth\RegisteredStudentController;
+use App\Http\Controllers\HomeController;
+use App\Http\Controllers\LocaleController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\Student;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/', function () {
-    $user = auth()->user();
+// ── Public landing page ───────────────────────────────────────
+Route::get('/', HomeController::class)->name('home');
 
-    return redirect()->to(
-        $user ? ($user->isAdmin() ? route('admin.dashboard') : route('dashboard')) : route('login')
-    );
-});
+// ── Locale switcher (ar default, en optional) ─────────────────
+Route::get('locale/{locale}', LocaleController::class)->name('locale.switch');
 
 // ── Guest auth (phone-based) ──────────────────────────────────
 Route::middleware('guest')->group(function () {
