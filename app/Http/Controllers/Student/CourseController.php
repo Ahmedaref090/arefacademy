@@ -24,13 +24,25 @@ class CourseController extends Controller
 
     public function my(Request $request)
     {
-        $enrollments = $request->user()->enrollments()
+        $user = $request->user();
+
+        $enrollments = $user->enrollments()
             ->with('course.lessons')
             ->where('status', EnrollmentStatus::Active)
             ->latest('enrolled_at')
             ->get();
 
-        return view('student.courses.my', compact('enrollments'));
+        // Per-month courses the student can access via approved month
+        // subscriptions — these have no enrollment record, so they are
+        // passed separately and rendered in their own "My Courses" section.
+        $approvedMonths = $user->courseMonths()
+            ->with('course')
+            ->wherePivot('status', PurchaseStatus::Approved)
+            ->get()
+            ->sortBy([['course.title', 'asc'], ['sort_order', 'asc']])
+            ->values();
+
+        return view('student.courses.my', compact('enrollments', 'approvedMonths'));
     }
 
     public function show(Request $request, Course $course)

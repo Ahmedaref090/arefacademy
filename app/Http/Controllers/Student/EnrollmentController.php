@@ -10,11 +10,12 @@ use Illuminate\Http\Request;
 class EnrollmentController extends Controller
 {
     /**
-     * Handle a student's subscription request.
+     * Handle the "Subscribe to Month" submission from the course page.
      *
-     * - Lifetime courses are purchased through the normal payment checkout.
-     * - Per-month courses attach the chosen month to the course_month_user
-     *   pivot with a 'pending' status until an admin approves it.
+     * Nothing is written to the database here: the student is redirected to
+     * the checkout page carrying the selected course_month_id, where they
+     * upload a payment receipt. The month subscription is only recorded
+     * (as pending) once the receipt is submitted — see PaymentController@pay.
      */
     public function store(Request $request)
     {
@@ -24,7 +25,7 @@ class EnrollmentController extends Controller
 
         $course = Course::findOrFail($request->input('course_id'));
 
-        // Full-course (lifetime) purchases keep using the existing checkout flow.
+        // Full-course (lifetime) purchases go straight to checkout, no month needed.
         if (! $course->isPerMonth()) {
             return redirect()->route('payments.checkout', $course);
         }
@@ -37,8 +38,8 @@ class EnrollmentController extends Controller
         // 404 if the selected month does not belong to this course.
         $month = $course->months()->findOrFail($data['course_month_id']);
 
-        // Double-subscription prevention: block when a pending or approved
-        // request already exists for this month.
+        // Double-subscription prevention: don't let the student reach checkout
+        // for a month that is already pending or approved.
         $alreadySubscribed = $request->user()->courseMonths()
             ->wherePivot('course_month_id', $month->id)
             ->wherePivotIn('status', [PurchaseStatus::Pending, PurchaseStatus::Approved])
@@ -48,12 +49,11 @@ class EnrollmentController extends Controller
             return back()->with('error', __('messages.already_subscribed'));
         }
 
-        // syncWithoutDetaching attaches with 'pending' — and safely re-uses an
-        // old (e.g. rejected) row instead of creating a duplicate.
-        $request->user()->courseMonths()->syncWithoutDetaching([
-            $month->id => ['status' => PurchaseStatus::Pending],
+        // Hand off to checkout, carrying the selected month in the query string:
+        // /courses/{course}/checkout?course_month_id={id}
+        return redirect()->route('payments.checkout', [
+            'course' => $course,
+            'course_month_id' => $month->id,
         ]);
-
-        return back()->with('status', __('messages.subscription_requested'));
     }
 }

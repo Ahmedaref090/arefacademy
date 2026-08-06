@@ -11,7 +11,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class Payment extends Model
 {
     protected $fillable = [
-        'user_id', 'course_id', 'enrollment_id',
+        'user_id', 'course_id', 'course_month_id', 'enrollment_id',
         'amount', 'status', 'payment_method',
         'sender_details', 'receipt_image_path', 'rejection_reason',
         'paid_at', 'expires_at', 'reviewed_at',
@@ -37,6 +37,15 @@ class Payment extends Model
     public function course(): BelongsTo
     {
         return $this->belongsTo(Course::class);
+    }
+
+    /**
+     * The specific month this payment is for (per-month courses only).
+     * Null for full-course (lifetime) payments.
+     */
+    public function courseMonth(): BelongsTo
+    {
+        return $this->belongsTo(CourseMonth::class);
     }
 
     public function enrollment(): BelongsTo

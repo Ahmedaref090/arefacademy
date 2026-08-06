@@ -16,9 +16,19 @@
         </div>
     </div>
 
+    {{-- Selected month (per-month courses) --}}
+    @if($courseMonth)
+        <div class="card mb-6 border-indigo-500 text-sm">
+            أنت تدفع مقابل: <span class="font-semibold">{{ $courseMonth->name }}</span>
+        </div>
+    @endif
+
     @if((float) $course->price <= 0)
         <form method="POST" action="{{ route('payments.pay', $course) }}" class="card">
             @csrf
+            @if($courseMonth)
+                <input type="hidden" name="course_month_id" value="{{ $courseMonth->id }}">
+            @endif
             <button class="btn w-full">اشترك مجانًا</button>
         </form>
     @else
@@ -44,6 +54,9 @@
         {{-- Step 2: receipt form --}}
         <form method="POST" action="{{ route('payments.pay', $course) }}" enctype="multipart/form-data" class="card space-y-4">
             @csrf
+            @if($courseMonth)
+                <input type="hidden" name="course_month_id" value="{{ $courseMonth->id }}">
+            @endif
             <h2 class="font-semibold">٢. أرسل بيانات الدفع:</h2>
 
             <div>
