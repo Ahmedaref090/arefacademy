@@ -173,7 +173,7 @@
 {{-- ── Course content ─────────────────────────────────────────── --}}
 <div class="mb-4 flex items-center gap-2">
     <span class="flex h-8 w-8 items-center justify-center rounded-xl bg-indigo-100 text-indigo-600 dark:bg-indigo-500/10 dark:text-indigo-400">
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="h-4.5 w-4.5"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6A2.25 2.25 0 0 1 6 3.75h2.25A2.25 2.25 0 0 1 10.5 6v2.25a2.25 2.25 0 0 1-2.25 2.25H6a2.25 2.25 0 0 1-2.25-2.25V6ZM3.75 15.75A2.25 2.25 0 0 1 6 13.5h2.25a2.25 2.25 0 0 1 2.25 2.25V18a2.25 2.25 0 0 1-2.25 2.25H6A2.25 2.25 0 0 1 3.75 18v-2.25ZM13.5 6a2.25 2.25 0 0 1 2.25-2.25H18A2.25 2.25 0 0 1 20.25 6v2.25A2.25 2.25 0 0 1 18 10.5h-2.25a2.25 2.25 0 0 1-2.25-2.25V6ZM13.5 15.75a2.25 2.25 0 0 1 2.25-2.25H18a2.25 2.25 0 0 1 2.25 2.25V18A2.25 2.25 0 0 1 18 20.25h-2.25A2.25 2.25 0 0 1 13.5 18v-2.25Z" /></svg>
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="h-5 w-5"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6A2.25 2.25 0 0 1 6 3.75h2.25A2.25 2.25 0 0 1 10.5 6v2.25a2.25 2.25 0 0 1-2.25 2.25H6a2.25 2.25 0 0 1-2.25-2.25V6ZM3.75 15.75A2.25 2.25 0 0 1 6 13.5h2.25a2.25 2.25 0 0 1 2.25 2.25V18a2.25 2.25 0 0 1-2.25 2.25H6A2.25 2.25 0 0 1 3.75 18v-2.25ZM13.5 6a2.25 2.25 0 0 1 2.25-2.25H18A2.25 2.25 0 0 1 20.25 6v2.25A2.25 2.25 0 0 1 18 10.5h-2.25a2.25 2.25 0 0 1-2.25-2.25V6ZM13.5 15.75a2.25 2.25 0 0 1 2.25-2.25H18a2.25 2.25 0 0 1 2.25 2.25V18A2.25 2.25 0 0 1 18 20.25h-2.25A2.25 2.25 0 0 1 13.5 18v-2.25Z" /></svg>
     </span>
     <h2 class="text-lg font-bold">Course Content</h2>
     <span class="text-sm text-gray-400">· {{ $lessonCount }} lessons</span>
@@ -268,4 +268,50 @@
                 <div class="flex min-w-0 items-center gap-3">
                     <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg {{ $locked ? 'bg-gray-100 text-gray-400 dark:bg-gray-800' : 'bg-indigo-100 text-indigo-600 dark:bg-indigo-500/10 dark:text-indigo-400' }}">
                         @if($locked)
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="h-4 w-4"><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="h-4 w-4"><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z" /></svg>
+                        @else
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="h-4 w-4"><path stroke-linecap="round" stroke-linejoin="round" d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.347a1.125 1.125 0 0 1 0 1.972l-11.54 6.347a1.125 1.125 0 0 1-1.667-.986V5.653Z" /></svg>
+                        @endif
+                    </span>
+                    <div class="min-w-0">
+                        @if($locked)
+                            <span class="block truncate text-sm text-gray-400 dark:text-gray-500">{{ $lesson->title }}</span>
+                        @else
+                            <a class="block truncate text-sm font-medium text-gray-700 transition-colors duration-200 hover:text-indigo-600 dark:text-gray-200 dark:hover:text-indigo-400" href="{{ route('lessons.show', $lesson) }}">{{ $lesson->title }}</a>
+                        @endif
+                        @if($lesson->is_free)
+                            <span class="mt-0.5 inline-flex items-center rounded-full bg-sky-100 px-2 py-0.5 text-[11px] font-medium text-sky-700 dark:bg-sky-500/10 dark:text-sky-400">Free preview</span>
+                        @endif
+                    </div>
+                </div>
+                @if($lesson->duration_minutes)
+                    <span class="flex shrink-0 items-center gap-1 text-xs text-gray-400">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="h-3.5 w-3.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" /></svg>
+                        {{ $lesson->duration_minutes }} min
+                    </span>
+                @endif
+            </div>
+        @empty
+            <div class="px-3 py-4 text-sm text-gray-400">No lessons yet.</div>
+        @endforelse
+    </div>
+@endif
+
+{{-- Accordion toggle: smooth slide via grid-rows 0fr → 1fr + chevron rotation --}}
+<script>
+    document.querySelectorAll('[data-accordion-toggle]').forEach(function (toggle) {
+        toggle.addEventListener('click', function () {
+            var body = toggle.parentElement.querySelector('[data-accordion-body]');
+            var chevron = toggle.querySelector('[data-chevron]');
+            if (! body) return;
+
+            var isOpen = body.classList.contains('grid-rows-[1fr]');
+            body.classList.toggle('grid-rows-[1fr]', ! isOpen);
+            body.classList.toggle('grid-rows-[0fr]', isOpen);
+            if (chevron) {
+                chevron.classList.toggle('rotate-180', ! isOpen);
+            }
+        });
+    });
+</script>
+@endsection
