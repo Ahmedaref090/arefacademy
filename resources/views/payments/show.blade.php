@@ -15,6 +15,13 @@
             <span class="font-mono font-bold">{{ number_format($payment->amount, 2) }} EGP</span>
         </div>
 
+        @if($payment->courseMonth)
+            <div class="flex items-center justify-between text-sm">
+                <span class="text-gray-500 dark:text-gray-400">الشهر</span>
+                <span class="font-semibold">{{ $payment->courseMonth->name }}</span>
+            </div>
+        @endif
+
         <div class="flex items-center justify-between text-sm">
             <span class="text-gray-500 dark:text-gray-400">طريقة الدفع</span>
             <span>{{ $payment->payment_method?->label() ?? '—' }}</span>

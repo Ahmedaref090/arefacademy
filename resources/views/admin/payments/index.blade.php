@@ -47,11 +47,12 @@
 </form>
 
 <div class="card overflow-x-auto p-0">
-    <table class="w-full min-w-[960px] text-sm">
+    <table class="w-full min-w-[1040px] text-sm">
         <thead>
             <tr class="border-b border-gray-200 text-left text-xs uppercase text-gray-400 dark:border-gray-800">
                 <th class="px-5 py-3">Student</th>
                 <th class="px-5 py-3">Course</th>
+                <th class="px-5 py-3">Month</th>
                 <th class="px-5 py-3">Amount</th>
                 <th class="px-5 py-3">Method</th>
                 <th class="px-5 py-3">Sender</th>
@@ -69,6 +70,13 @@
                         <div class="font-mono text-xs text-gray-400" dir="ltr">{{ $payment->user->phone }}</div>
                     </td>
                     <td class="px-5 py-3">{{ $payment->course->title }}</td>
+                    <td class="px-5 py-3">
+                        @if($payment->courseMonth)
+                            <span class="badge bg-indigo-100 text-indigo-700 dark:bg-indigo-500/10 dark:text-indigo-400">{{ $payment->courseMonth->name }}</span>
+                        @else
+                            <span class="text-gray-400">Full course</span>
+                        @endif
+                    </td>
                     <td class="px-5 py-3 font-mono">{{ number_format($payment->amount, 2) }}</td>
                     <td class="px-5 py-3">{{ $payment->payment_method?->label() ?? '—' }}</td>
                     <td class="px-5 py-3 font-mono" dir="ltr">{{ $payment->sender_details ?? '—' }}</td>
@@ -103,7 +111,7 @@
                     <td class="px-5 py-3">
                         @if($payment->isPending())
                             <div class="flex flex-col gap-2">
-                                <form method="POST" action="{{ route('admin.payments.approve', $payment) }}" onsubmit="return confirm('Approve this payment and activate the 30-day subscription?')">
+                                <form method="POST" action="{{ route('admin.payments.approve', $payment) }}" onsubmit="return confirm('{{ $payment->course_month_id ? 'Approve this payment and activate the month subscription?' : 'Approve this payment and activate the 30-day subscription?' }}')">
                                     @csrf
                                     <button class="btn">Approve</button>
                                 </form>
@@ -119,7 +127,7 @@
                     </td>
                 </tr>
             @empty
-                <tr><td colspan="9" class="px-5 py-4 text-center text-gray-400">No payments found.</td></tr>
+                <tr><td colspan="10" class="px-5 py-4 text-center text-gray-400">No payments found.</td></tr>
             @endforelse
         </tbody>
     </table>
