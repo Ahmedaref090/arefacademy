@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Student;
 
 use App\Enums\GradeLevel;
+use App\Enums\PurchaseStatus;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -66,25 +67,26 @@ class ProfileController extends Controller
     }
 
     /**
-     * "My Courses" tab: every course the student has interacted with.
-     * - Lifetime courses: listed with their overall purchase status.
-     * - Per-month courses: grouped by course, each month with its own status
-     *   (e.g. "Math 101: August (Approved), September (Pending)").
+     * "My Courses" tab in the account section: active enrollments plus
+     * per-month courses the student has at least one approved month for.
      */
     public function courses(Request $request)
     {
         $user = $request->user();
 
-        $lifetimePurchases = $user->purchasedCourses()
-            ->latest('course_user.created_at')
+        $enrollments = $user->enrollments()
+            ->with('course.lessons')
+            ->where('status', \App\Enums\EnrollmentStatus::Active)
+            ->latest('enrolled_at')
             ->get();
 
-        $monthPurchases = $user->courseMonths()
+        $approvedMonths = $user->courseMonths()
             ->with('course')
-            ->latest('course_month_user.created_at')
+            ->wherePivot('status', PurchaseStatus::Approved)
             ->get()
-            ->groupBy('course_id');
+            ->sortBy([['course.title', 'asc'], ['sort_order', 'asc']])
+            ->values();
 
-        return view('student.profile.courses', compact('lifetimePurchases', 'monthPurchases'));
+        return view('student.profile.courses', compact('enrollments', 'approvedMonths'));
     }
 }

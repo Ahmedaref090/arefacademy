@@ -5,31 +5,21 @@ namespace App\Http\Controllers\Student;
 use App\Http\Controllers\Controller;
 use App\Models\Lesson;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Gate;
 
 class LessonController extends Controller
 {
     public function show(Request $request, Lesson $lesson)
     {
-        // LessonPolicy::view — requires an approved purchase (course_user /
-        // course_month_user), an active legacy enrollment, an admin, or a
-        // free preview lesson. Everyone else gets a 403.
-        Gate::authorize('view', $lesson);
-
         $user = $request->user();
+
+        // Free previews are open to everyone; everything else requires an
+        // active full-course subscription or an approved subscription for
+        // the lesson's specific month (per-month courses).
+        abort_unless($user->canAccessLesson($lesson), 403);
 
         $lesson->load(['course.lessons', 'attachments', 'quizzes.questions', 'assignments']);
 
         $course = $lesson->course;
-
-        // "enrolled" = paid/approved access (not merely a free preview) —
-        // the view uses it to toggle purchase prompts vs. full-content UI.
-        $enrolled = $user->isAdmin()
-            || $user->hasActiveSubscriptionTo($course) // legacy enrollment system
-            || $user->hasApprovedPurchaseFor($course)
-            || ($course->isPerMonth()
-                && $lesson->month !== null
-                && $user->hasApprovedPurchaseForMonth($lesson->month));
 
         $lessons = $course->lessons;
         $index = $lessons->search(fn ($l) => $l->id === $lesson->id);
@@ -43,7 +33,6 @@ class LessonController extends Controller
 
         return view('student.lessons.show', [
             'lesson' => $lesson,
-            'enrolled' => $enrolled,
             'completed' => in_array($lesson->id, $completedIds),
             'completedIds' => $completedIds,
             'prev' => $prev,
@@ -53,7 +42,7 @@ class LessonController extends Controller
 
     public function complete(Request $request, Lesson $lesson)
     {
-        Gate::authorize('view', $lesson);
+        abort_unless($request->user()->canAccessLesson($lesson), 403);
 
         $request->user()->markLessonCompleted($lesson);
 
@@ -66,7 +55,7 @@ class LessonController extends Controller
      */
     public function progress(Request $request, Lesson $lesson)
     {
-        Gate::authorize('view', $lesson);
+        abort_unless($request->user()->canAccessLesson($lesson), 403);
 
         $data = $request->validate([
             'seconds' => ['required', 'integer', 'min:1', 'max:300'],

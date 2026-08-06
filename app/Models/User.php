@@ -175,6 +175,35 @@ class User extends Authenticatable
         return $enrollment !== null && ! $enrollment->isExpired();
     }
 
+    /**
+     * True when the student may watch a lesson's video:
+     *
+     * - Free-preview lessons are always accessible.
+     * - An active (non-expired) full-course subscription unlocks everything.
+     * - Otherwise, a lesson that belongs to a course month requires an
+     *   APPROVED subscription for that specific month — pending months
+     *   stay locked until the admin confirms the payment.
+     */
+    public function canAccessLesson(Lesson $lesson): bool
+    {
+        if ($lesson->is_free) {
+            return true;
+        }
+
+        if ($this->hasActiveSubscriptionTo($lesson->course)) {
+            return true;
+        }
+
+        if ($lesson->course_month_id) {
+            return $this->courseMonths()
+                ->where('course_months.id', $lesson->course_month_id)
+                ->wherePivot('status', PurchaseStatus::Approved)
+                ->exists();
+        }
+
+        return false;
+    }
+
     public function markLessonCompleted(Lesson $lesson): void
     {
         if ($this->completedLessons()->where('lesson_id', $lesson->id)->exists()) {
