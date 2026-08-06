@@ -46,6 +46,12 @@
         @if($payment->isApproved())
             <a href="{{ route('courses.show', $payment->course) }}" class="btn block text-center">الانتقال إلى الكورس</a>
         @elseif($payment->isRejected())
+            @if($payment->rejection_reason)
+                <div class="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700 dark:border-red-500/30 dark:bg-red-500/10 dark:text-red-400">
+                    <span class="font-semibold">سبب الرفض:</span>
+                    {{ $payment->rejection_reason }}
+                </div>
+            @endif
             <p class="text-sm text-red-600">تم رفض هذا الدفع. تأكد من بيانات التحويل ثم أعد المحاولة.</p>
             <a href="{{ route('payments.checkout', $payment->course) }}" class="btn block text-center">إعادة المحاولة</a>
         @else
