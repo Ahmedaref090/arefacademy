@@ -19,9 +19,9 @@
         </div>
         <div class="font-mono text-xl font-bold text-indigo-600 dark:text-indigo-400">
             @if($courseMonths->isNotEmpty())
-                {{ number_format((float) $course->price * $courseMonths->count(), 2) }} {{ __('EGP') }}
+                {{ number_format($course->effectivePrice() * $courseMonths->count(), 2) }} {{ __('EGP') }}
             @else
-                {{ (float) $course->price > 0 ? number_format($course->price, 2) . ' ' . __('EGP') : __('Free') }}
+                {{ $course->effectivePrice() > 0 ? number_format($course->effectivePrice(), 2) . ' ' . __('EGP') : __('Free') }}
             @endif
         </div>
     </div>
@@ -34,18 +34,18 @@
                 @foreach($courseMonths as $month)
                     <li class="flex items-center justify-between">
                         <span class="font-medium">{{ $month->name }}</span>
-                        <span class="font-mono text-indigo-600 dark:text-indigo-400">{{ number_format((float) $course->price, 2) }} {{ __('EGP') }}</span>
+                        <span class="font-mono text-indigo-600 dark:text-indigo-400">{{ number_format($course->effectivePrice(), 2) }} {{ __('EGP') }}</span>
                     </li>
                 @endforeach
             </ul>
             <div class="mt-2 flex items-center justify-between border-t border-gray-200 pt-2 font-bold dark:border-gray-700">
                 <span>{{ __('Total') }}</span>
-                <span class="font-mono text-indigo-600 dark:text-indigo-400">{{ number_format((float) $course->price * $courseMonths->count(), 2) }} {{ __('EGP') }}</span>
+                <span class="font-mono text-indigo-600 dark:text-indigo-400">{{ number_format($course->effectivePrice() * $courseMonths->count(), 2) }} {{ __('EGP') }}</span>
             </div>
         </div>
     @endif
 
-    @if((float) $course->price <= 0)
+    @if($course->effectivePrice() <= 0)
         <form method="POST" action="{{ route('payments.pay', $course) }}" class="card">
             @csrf
             @foreach($courseMonths as $month)

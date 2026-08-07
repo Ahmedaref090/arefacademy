@@ -90,7 +90,7 @@ class PaymentController extends Controller
             : collect();
 
         // Free course: activate the (full) enrollment immediately.
-        if ((float) $course->price <= 0) {
+        if ($course->effectivePrice() <= 0) {
             Enrollment::updateOrCreate(
                 ['user_id' => $user->id, 'course_id' => $course->id],
                 [
@@ -144,9 +144,9 @@ class PaymentController extends Controller
         );
 
         // Server-derived total (used for the admin's review context / logs):
-        // Total = Course Base Price × number of selected months.
+        // Total = Effective (discounted) Price × number of selected months.
         $monthCount = max(1, $courseMonths->count());
-        $total = (float) $course->price * $monthCount;
+        $total = $course->effectivePrice() * $monthCount;
 
         // ONE receipt per checkout, attaching every selected month to it,
         // so the admin reviews a single consolidated payment (One receipt →

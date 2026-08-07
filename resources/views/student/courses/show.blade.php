@@ -53,8 +53,17 @@
                 <div class="text-xs font-medium uppercase tracking-wide text-indigo-100">
                     {{ $isPerMonth ? __('Price / month') : __('Full course') }}
                 </div>
-                <div class="mt-1 text-3xl font-extrabold text-white">
-                    {{ (float) $course->price > 0 ? number_format($course->price, 2) . ' ' . __('EGP') : __('Free') }}
+                <div class="mt-1 flex items-baseline gap-2">
+                    @if($course->hasDiscount())
+                        <span class="font-mono text-sm text-indigo-200 line-through">{{ number_format((float) $course->price, 2) }} {{ __('EGP') }}</span>
+                        <span class="text-3xl font-extrabold text-white">
+                            {{ $course->effectivePrice() > 0 ? number_format($course->effectivePrice(), 2) . ' ' . __('EGP') : __('Free') }}
+                        </span>
+                    @else
+                        <span class="text-3xl font-extrabold text-white">
+                            {{ $course->effectivePrice() > 0 ? number_format($course->effectivePrice(), 2) . ' ' . __('EGP') : __('Free') }}
+                        </span>
+                    @endif
                 </div>
 
                 @if($isPerMonth)
@@ -62,7 +71,7 @@
                     @if($availableMonths->isNotEmpty())
                         <form method="POST" action="{{ route('enrollments.store') }}" class="mt-4 space-y-3"
                             x-data="monthSelector()"
-                            x-init='init(@json($availableMonths->map(fn ($m) => ['id' => $m->id, 'name' => $m->name])->values()->all(), JSON_UNESCAPED_UNICODE), @js((float) $course->price))'>
+                            x-init='init(@json($availableMonths->map(fn ($m) => ['id' => $m->id, 'name' => $m->name])->values()->all(), JSON_UNESCAPED_UNICODE), @js($course->effectivePrice()))'>
                             @csrf
                             <input type="hidden" name="course_id" value="{{ $course->id }}">
 

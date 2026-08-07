@@ -74,6 +74,24 @@ class Course extends Model
         return $this->pricing_type === PricingType::PerMonth;
     }
 
+    /**
+     * A discount applies only when a sale price exists and is actually lower.
+     */
+    public function hasDiscount(): bool
+    {
+        return ! is_null($this->sale_price)
+            && (float) $this->sale_price < (float) $this->price;
+    }
+
+    /**
+     * The price a student should actually pay: the sale price when a discount
+     * applies, otherwise the original base price.
+     */
+    public function effectivePrice(): float
+    {
+        return $this->hasDiscount() ? (float) $this->sale_price : (float) $this->price;
+    }
+
     public function lessons(): HasMany
     {
         return $this->hasMany(Lesson::class)->orderBy('sort_order');
