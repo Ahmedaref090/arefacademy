@@ -81,16 +81,28 @@
 <body class="{{ auth()->user()?->isAdmin() ? 'aurora-bg' : 'aurora-bg-light' }} min-h-screen font-sans text-slate-900 antialiased dark:text-slate-100">
 @php($u = auth()->user())
 @php($notifications = $notifications ?? collect())
-<div class="flex min-h-screen">
+<div class="flex min-h-screen" x-data="{ sidebarOpen: false }">
 
-    {{-- Sidebar --}}
-    <aside class="hidden w-64 shrink-0 flex-col border-e border-slate-200/70 bg-white/70 p-5 backdrop-blur-xl dark:border-slate-800 dark:bg-slate-900/70 md:flex">
+    {{-- Backdrop — visible on mobile/tablet when the off-canvas sidebar is open --}}
+    <div x-show="sidebarOpen" @click="sidebarOpen = false" x-transition.opacity x-cloak
+         class="fixed inset-0 z-40 bg-slate-900/50 backdrop-blur-sm lg:hidden"></div>
+
+    {{-- Sidebar: static drawer on lg+, off-canvas (slide-in) below lg --}}
+    <aside
+        x-show="sidebarOpen"
+        x-transition:enter="transition ease-in-out duration-300"
+        x-transition:enter-start="ltr:-translate-x-full rtl:translate-x-full"
+        x-transition:enter-end="translate-x-0"
+        x-transition:leave="transition ease-in-out duration-200"
+        x-transition:leave-start="translate-x-0"
+        x-transition:leave-end="ltr:-translate-x-full rtl:translate-x-full"
+        class="fixed inset-y-0 start-0 z-50 flex w-64 shrink-0 flex-col overflow-y-auto border-e border-slate-200/70 bg-white/70 p-5 backdrop-blur-xl dark:border-slate-800 dark:bg-slate-900/70 lg:static lg:z-auto lg:flex! lg:translate-x-0 lg:rtl:translate-x-0">
         <a href="{{ $u?->isAdmin() ? route('admin.dashboard') : route('dashboard') }}" class="mb-8 flex items-center gap-3 font-mono text-lg font-extrabold">
             <span class="grid h-10 w-10 place-items-center rounded-xl bg-gradient-to-br from-brand-600 to-fuchsia-600 text-sm text-white shadow-lg shadow-brand-500/40">&lt;/&gt;</span>
             <span class="text-gradient">{{ __('Aref Academy') }}</span>
         </a>
 
-        <nav class="flex flex-1 flex-col gap-1.5 text-sm">
+        <nav @click="sidebarOpen = false" class="flex flex-1 flex-col gap-1.5 text-sm">
             @if($u?->isAdmin())
                 <a class="nav-link {{ request()->routeIs('admin.dashboard') ? 'nav-link-active' : '' }}" href="{{ route('admin.dashboard') }}"><x-icon name="dashboard" class="h-[18px] w-[18px]"/> {{ __('Dashboard') }}</a>
                 <a class="nav-link {{ request()->routeIs('admin.courses.*') ? 'nav-link-active' : '' }}" href="{{ route('admin.courses.index') }}"><x-icon name="book" class="h-[18px] w-[18px]"/> {{ __('Courses') }}</a>
@@ -131,7 +143,10 @@
     <div class="flex min-w-0 flex-1 flex-col">
         {{-- Top bar (language switcher + notifications bell) --}}
         <header class="sticky top-0 z-40 flex items-center justify-between border-b border-slate-200/70 bg-white/70 px-4 py-3 backdrop-blur-xl dark:border-slate-800 dark:bg-slate-900/70">
-            <span class="flex items-center gap-2 font-mono font-extrabold md:hidden">
+            <span class="flex items-center gap-2 lg:hidden">
+                <button type="button" @click="sidebarOpen = !sidebarOpen" class="btn-secondary !px-2.5 py-2" aria-label="{{ __('Menu') }}" aria-expanded="false" :aria-expanded="sidebarOpen.toString()" title="{{ __('Menu') }}">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="h-5 w-5"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5"/></svg>
+                </button>
                 <span class="grid h-8 w-8 place-items-center rounded-lg bg-gradient-to-br from-brand-600 to-fuchsia-600 text-[11px] text-white">&lt;/&gt;</span>
             </span>
             <span class="hidden text-sm font-semibold text-slate-500 dark:text-slate-400 md:block">@yield('title', __('Aref Academy'))</span>
@@ -170,8 +185,8 @@
                     </div>
                 @endif
 
-                <button type="button" onclick="toggleTheme()" class="btn-secondary !px-3 py-2 md:hidden"><x-icon name="moon" class="h-5 w-5" :stroke="2"/></button>
-                <form method="POST" action="{{ route('logout') }}" class="md:hidden">@csrf<button class="btn-secondary"><x-icon name="logout" class="h-5 w-5" :stroke="2"/></button></form>
+                <button type="button" onclick="toggleTheme()" class="btn-secondary !px-3 py-2 lg:hidden"><x-icon name="moon" class="h-5 w-5" :stroke="2"/></button>
+                <form method="POST" action="{{ route('logout') }}" class="lg:hidden">@csrf<button class="btn-secondary"><x-icon name="logout" class="h-5 w-5" :stroke="2"/></button></form>
             </div>
         </header>
 
