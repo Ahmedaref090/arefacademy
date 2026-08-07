@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Aref Academy
 
 A Learning Management System (LMS) for programming courses, built with Laravel, Blade, Tailwind CSS v4, and Alpine.js — with Fawry Pay integration for the Egyptian market.
@@ -91,3 +92,6 @@ Feature tests cover: phone auth, admin access control, free/paid enrollment
     config/fawry.php               Fawry credentials (from .env)
     config/governorates.php        Egyptian governorates list
     resources/views/               Blade + Tailwind v4 + Alpine.js
+=======
+# arefacademy
+>>>>>>> origin/main
