@@ -4,9 +4,11 @@ namespace App\Http\Controllers\Student;
 
 use App\Enums\EnrollmentStatus;
 use App\Enums\PaymentStatus;
+use App\Enums\PricingType;
 use App\Enums\PurchaseStatus;
 use App\Http\Controllers\Controller;
 use App\Models\Course;
+use App\Models\CourseMonth;
 use Illuminate\Http\Request;
 
 class CourseController extends Controller
@@ -19,22 +21,62 @@ class CourseController extends Controller
             ->latest()
             ->paginate(12);
 
-        return view('student.courses.index', compact('courses'));
+        // Monthly courses for the dependent Course → Month subscription widget.
+        $monthlyCourses = Course::where('is_published', true)
+            ->where('pricing_type', PricingType::PerMonth->value)
+            ->with('months')
+            ->orderBy('id')
+            ->get()
+            ->filter(fn (Course $course) => $course->months->isNotEmpty())
+            ->sortBy('title')
+            ->values();
+
+        return view('student.courses.index', compact('courses', 'monthlyCourses'));
+    }
+
+    /**
+     * JSON list of months for a per-month course, consumed by the dependent
+     * dropdown on the All Courses page. Months the student already requested
+     * (pending) or was granted (approved) are excluded.
+     */
+    public function months(Request $request, Course $course)
+    {
+        $excludedIds = $request->user()->courseMonths()
+            ->where('course_months.course_id', $course->id)
+            ->wherePivotIn('status', [PurchaseStatus::Pending, PurchaseStatus::Approved])
+            ->pluck('course_months.id')
+            ->all();
+
+        $months = $course->months()
+            ->whereNotIn('course_months.id', $excludedIds)
+            ->orderBy('sort_order')
+            ->get(['id', 'name'])
+            ->map(fn (CourseMonth $month) => [
+                'id' => $month->id,
+                'name' => $month->name,
+            ])
+            ->values();
+
+        return response()->json($months);
     }
 
     public function my(Request $request)
     {
         $user = $request->user();
 
+        // "Full Courses" section — STRICTLY full-course enrollments only.
+        // Month-scoped enrollments (course_month_id != null) are excluded so a
+        // monthly course can never appear under both sections.
         $enrollments = $user->enrollments()
             ->with('course.lessons')
+            ->with('month')
             ->where('status', EnrollmentStatus::Active)
+            ->whereNull('course_month_id')
             ->latest('enrolled_at')
             ->get();
 
-        // Per-month courses the student can access via approved month
-        // subscriptions — these have no enrollment record, so they are
-        // passed separately and rendered in their own "My Courses" section.
+        // "Monthly Subscriptions" section — STRICTLY approved month pivots.
+        // These come from approved receipts or admin manual monthly enrolls.
         $approvedMonths = $user->courseMonths()
             ->with('course')
             ->wherePivot('status', PurchaseStatus::Approved)

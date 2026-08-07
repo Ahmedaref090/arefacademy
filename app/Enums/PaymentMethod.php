@@ -10,8 +10,8 @@ enum PaymentMethod: string
     public function label(): string
     {
         return match ($this) {
-            self::VodafoneCash => 'فودافون كاش',
-            self::InstaPay => 'إنستاباي',
+            self::VodafoneCash => __('Vodafone Cash'),
+            self::InstaPay => __('InstaPay'),
         };
     }
 }

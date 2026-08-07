@@ -2,8 +2,11 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Enums\EnrollmentStatus;
 use App\Enums\PurchaseStatus;
 use App\Http\Controllers\Controller;
+use App\Models\Course;
+use App\Models\Enrollment;
 use Illuminate\Support\Facades\DB;
 
 class SubscriptionController extends Controller
@@ -67,11 +70,29 @@ class SubscriptionController extends Controller
 
     protected function setStatus(string $table, int $id, PurchaseStatus $status)
     {
-        DB::table($table)->where('id', $id)->update([
-            'status' => $status->value,
-            'updated_at' => now(),
-        ]);
+        DB::transaction(function () use ($table, $id, $status) {
+            $request = DB::table($table)->where('id', $id)->first();
 
-        return back()->with('status', "Request {$status->value}.");
+            DB::table($table)->where('id', $id)->update([
+                'status' => $status->value,
+                'updated_at' => now(),
+            ]);
+
+            // A lifetime course request only "unlocks" once the admin also
+            // activates a full-course enrollment — the pivots alone never
+            // grant lesson/quiz/assignment access.
+            if ($table === 'course_user' && $status === PurchaseStatus::Approved && $request) {
+                $course = Course::whereKey($request->course_id)->first();
+
+                if ($course) {
+                    Enrollment::updateOrCreate(
+                        ['user_id' => $request->user_id, 'course_id' => $course->id],
+                        ['status' => EnrollmentStatus::Active, 'enrolled_at' => now()]
+                    );
+                }
+            }
+        });
+
+        return back()->with('status', __('Request :status.', ['status' => $status->label()]));
     }
 }

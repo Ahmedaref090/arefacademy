@@ -23,7 +23,7 @@ class SubmissionController extends Controller
     public function grade(Request $request, Submission $submission)
     {
         $data = $request->validate([
-            'score' => ['required', 'integer', 'min:0', 'max:' . $submission->assignment->max_score],
+            'score' => ['required', 'integer', 'min:0', 'max:'.$submission->assignment->max_score],
             'feedback' => ['nullable', 'string'],
         ]);
 
@@ -33,6 +33,6 @@ class SubmissionController extends Controller
             'graded_at' => now(),
         ]);
 
-        return back()->with('status', 'Submission graded.');
+        return back()->with('status', __('Submission graded.'));
     }
 }

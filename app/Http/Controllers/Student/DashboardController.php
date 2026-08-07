@@ -37,7 +37,11 @@ class DashboardController extends Controller
         ];
 
         // ── Invoices / subscriptions table ──────────────────────────
-        $payments = $user->payments()->with('course')->latest()->limit(10)->get();
+        $payments = $user->payments()
+            ->with('course', 'courseMonth', 'courseMonths')
+            ->latest()
+            ->limit(10)
+            ->get();
 
         return view('student.dashboard', [
             'enrollments' => $enrollments,

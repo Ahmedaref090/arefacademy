@@ -4,7 +4,6 @@
 @section('content')
 @php
     // Group courses by grade level (enum-cast, plain string, or none).
-    // Tabs are only shown when at least one course has a real grade level.
     $gradeKey = function ($course) {
         $g = $course->grade_level ?? null;
         if ($g instanceof \App\Enums\GradeLevel) {
@@ -30,41 +29,46 @@
 {{-- Hero --}}
 <section class="relative overflow-hidden">
     <div class="absolute inset-0 -z-10 bg-gradient-to-br from-brand-50 via-white to-gold-50 dark:from-slate-950 dark:via-slate-950 dark:to-brand-950"></div>
-    <div class="absolute -top-24 -start-24 -z-10 h-72 w-72 rounded-full bg-brand-400/20 blur-3xl"></div>
-    <div class="absolute -bottom-24 -end-24 -z-10 h-72 w-72 rounded-full bg-gold-400/20 blur-3xl"></div>
+    <div class="blob -top-24 start-0 h-80 w-80 bg-brand-400/40"></div>
+    <div class="blob -bottom-24 end-0 h-80 w-80 bg-gold-400/40" style="animation-delay:-6s"></div>
+    <div class="blob top-1/2 start-1/2 h-72 w-72 bg-fuchsia-400/30" style="animation-delay:-11s"></div>
 
-    <div class="mx-auto grid max-w-7xl items-center gap-12 px-4 py-16 sm:px-6 lg:grid-cols-2 lg:gap-16 lg:px-8 lg:py-24">
+    <div class="mx-auto grid max-w-7xl items-center gap-14 px-4 py-20 sm:px-6 lg:grid-cols-2 lg:gap-16 lg:px-8 lg:py-28">
         <div data-reveal>
-            <span class="badge bg-brand-600/10 text-brand-700 dark:bg-gold-500/10 dark:text-gold-400">⚡ {{ __('Programming learning platform') }}</span>
-            <h1 class="mt-4 text-4xl font-extrabold leading-tight tracking-tight sm:text-5xl lg:text-6xl">
-                {{ __('Aref in Programming') }}
+            <span class="eyebrow"><x-icon name="sparkles" class="h-4 w-4" :stroke="2"/> {{ __('Programming learning platform') }}</span>
+            <h1 class="mt-5 text-4xl font-extrabold leading-[1.08] tracking-tight sm:text-5xl lg:text-6xl">
+                <span class="text-gradient-animated">{{ __('Aref in Programming') }}</span>
             </h1>
-            <p class="text-gradient mt-3 text-2xl font-bold sm:text-3xl">
+            <p class="mt-4 text-2xl font-bold text-slate-700 dark:text-slate-200 sm:text-3xl">
                 {{ __('Learn programming the right way.') }}
             </p>
-            <p class="mt-4 max-w-lg text-lg text-slate-600 dark:text-slate-300">
+            <p class="mt-4 max-w-lg text-pretty text-lg text-slate-600 dark:text-slate-300">
                 {{ __('Structured courses, real projects, quizzes and assignments — everything you need to go from zero to professional.') }}
             </p>
-            <div class="mt-8 flex flex-wrap gap-3">
-                <a href="{{ route('register') }}" class="rounded-xl bg-brand-600 px-6 py-3 font-semibold text-white shadow-lg shadow-brand-600/30 transition hover:bg-brand-700">{{ __('Get Started') }}</a>
-                <a href="#courses" class="rounded-xl border border-slate-300 px-6 py-3 font-semibold transition hover:bg-slate-100 dark:border-slate-700 dark:hover:bg-slate-800">{{ __('Browse Courses') }}</a>
+            <div class="mt-9 flex flex-wrap gap-4">
+                <a href="{{ route('register') }}" class="btn !px-8 !py-3.5 !text-base"><x-icon name="rocket" class="h-5 w-5" :stroke="1.8"/> {{ __('Get Started') }}</a>
+                <a href="#courses" class="btn-secondary !px-8 !py-3.5 !text-base"><x-icon name="book" class="h-5 w-5" :stroke="1.8"/> {{ __('Browse Courses') }}</a>
             </div>
-            <ul class="mt-8 flex flex-wrap gap-x-6 gap-y-2 text-sm text-slate-500 dark:text-slate-400">
-                @foreach([__('Arabic explanations'), __('Hands-on projects'), __('Quizzes & assignments')] as $perk)
-                    <li class="flex items-center gap-1.5"><span class="text-gold-500">✔</span> {{ $perk }}</li>
+            <ul class="mt-9 flex flex-wrap gap-x-7 gap-y-3 text-sm font-medium text-slate-600 dark:text-slate-300">
+                @foreach([
+                    ['i' => 'check', 't' => __('Arabic explanations')],
+                    ['i' => 'code', 't' => __('Hands-on projects')],
+                    ['i' => 'trophy', 't' => __('Quizzes & assignments')],
+                ] as $perk)
+                    <li class="flex items-center gap-2"><span class="grid h-6 w-6 place-items-center rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-400"><x-icon name="{{ $perk['i'] }}" class="h-4 w-4" :stroke="2.2"/></span> {{ $perk['t'] }}</li>
                 @endforeach
             </ul>
         </div>
 
-        <div class="relative pb-10" data-reveal>
-            <x-landing.code-window />
-            {{-- Floating instructor card — pinned to the bottom-right corner of the code window in both LTR and RTL --}}
-            <div class="absolute -bottom-5 right-4 flex w-56 items-center gap-3 rounded-2xl border border-slate-200 bg-white/90 p-3 shadow-xl backdrop-blur dark:border-slate-800 dark:bg-slate-900/90 sm:w-64">
+        <div class="relative pb-10" data-reveal data-reveal-delay="1">
+            <div class="animate-float"><x-landing.code-window /></div>
+            {{-- Floating instructor card --}}
+            <div class="absolute -bottom-5 right-4 flex w-60 items-center gap-3 rounded-2xl border border-slate-200/80 bg-white/90 p-3 shadow-2xl backdrop-blur-xl dark:border-slate-800 dark:bg-slate-900/90 sm:w-64">
                 <img src="/images/instructor.png" alt="{{ __('Instructor') }}"
-                     class="h-12 w-12 shrink-0 rounded-xl object-cover"
-                     onerror="this.src='https://placehold.co/96x96/d32f2f/ffffff?text=A'">
+                     class="h-12 w-12 shrink-0 rounded-xl object-cover ring-2 ring-brand-500/30"
+                     onerror="this.src='https://placehold.co/96x96/6d38f6/ffffff?text=A'">
                 <div class="min-w-0">
-                    <div class="truncate text-sm font-bold">{{ __('Your instructor') }}</div>
+                    <div class="truncate text-sm font-extrabold">{{ __('Your instructor') }}</div>
                     <div class="truncate text-xs text-slate-500 dark:text-slate-400">{{ __('With you step by step') }}</div>
                 </div>
             </div>
@@ -73,28 +77,29 @@
 </section>
 
 {{-- Courses (with grade-level tabs) --}}
-<section id="courses" class="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8" x-data="{ tab: 'all' }">
-    <div class="mb-8 text-center" data-reveal>
-        <h2 class="text-3xl font-extrabold">{{ __('Available Courses') }}</h2>
-        <p class="mt-2 text-slate-500 dark:text-slate-400">{{ __('Pick a course and start learning today.') }}</p>
+<section id="courses" class="mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8" x-data="{ tab: 'all' }">
+    <div class="mb-10 text-center" data-reveal>
+        <span class="eyebrow"><x-icon name="book" class="h-4 w-4" :stroke="2"/> {{ __('Our catalog') }}</span>
+        <h2 class="mt-4 text-4xl font-extrabold sm:text-5xl">{{ __('Available Courses') }}</h2>
+        <p class="mt-3 text-lg text-slate-500 dark:text-slate-400">{{ __('Pick a course and start learning today.') }}</p>
     </div>
 
     @if($showTabs)
-        <div class="mb-8 flex flex-wrap justify-center gap-2" data-reveal>
+        <div class="mb-9 flex flex-wrap justify-center gap-2.5" data-reveal>
             <button type="button" @click="tab = 'all'"
-                    :class="tab === 'all' ? 'border-brand-600 bg-brand-600 text-white' : 'border-slate-300 text-slate-600 hover:border-brand-400 dark:border-slate-700 dark:text-slate-300'"
-                    class="rounded-full border px-4 py-1.5 text-sm font-semibold transition">{{ __('All') }}</button>
+                    :class="tab === 'all' ? 'border-transparent bg-gradient-to-br from-brand-600 to-fuchsia-600 text-white shadow-lg shadow-brand-500/30' : 'border-slate-300 bg-white text-slate-600 hover:border-brand-400 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300'"
+                    class="rounded-full border px-5 py-2 text-sm font-bold transition-all duration-300 hover:-translate-y-0.5">{{ __('All') }}</button>
             @foreach($grouped as $key => $group)
                 @if($key !== 'general')
                     <button type="button" @click="tab = '{{ $key }}'"
-                            :class="tab === '{{ $key }}' ? 'border-brand-600 bg-brand-600 text-white' : 'border-slate-300 text-slate-600 hover:border-brand-400 dark:border-slate-700 dark:text-slate-300'"
-                            class="rounded-full border px-4 py-1.5 text-sm font-semibold transition">{{ $gradeLabel($group->first()) }}</button>
+                            :class="tab === '{{ $key }}' ? 'border-transparent bg-gradient-to-br from-brand-600 to-fuchsia-600 text-white shadow-lg shadow-brand-500/30' : 'border-slate-300 bg-white text-slate-600 hover:border-brand-400 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300'"
+                            class="rounded-full border px-5 py-2 text-sm font-bold transition-all duration-300 hover:-translate-y-0.5">{{ $gradeLabel($group->first()) }}</button>
                 @endif
             @endforeach
         </div>
     @endif
 
-    <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3" data-reveal>
+    <div class="grid gap-7 sm:grid-cols-2 lg:grid-cols-3" data-reveal>
         @forelse($courses as $course)
             <x-landing.course-card :course="$course" :grade-key="$gradeKey($course)" />
         @empty
@@ -104,25 +109,28 @@
 </section>
 
 {{-- How it works --}}
-<section class="border-y border-slate-200 bg-white py-16 dark:border-slate-800 dark:bg-slate-900">
+<section id="how" class="border-y border-slate-200/70 bg-white/70 py-20 backdrop-blur dark:border-slate-800 dark:bg-slate-900/60">
     <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div class="mb-12 text-center" data-reveal>
-            <h2 class="text-3xl font-extrabold">{{ __('How do I start on the platform?') }}</h2>
-            <p class="mt-2 text-slate-500 dark:text-slate-400">{{ __('Four simple steps and you are in.') }}</p>
+        <div class="mb-14 text-center" data-reveal>
+            <span class="eyebrow"><x-icon name="layers" class="h-4 w-4" :stroke="2"/> {{ __('Simple') }}</span>
+            <h2 class="mt-4 text-4xl font-extrabold sm:text-5xl">{{ __('How do I start on the platform?') }}</h2>
+            <p class="mt-3 text-lg text-slate-500 dark:text-slate-400">{{ __('Four simple steps and you are in.') }}</p>
         </div>
-        <div class="relative grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+        <div class="relative grid gap-7 sm:grid-cols-2 lg:grid-cols-4">
             <div class="absolute inset-x-16 top-7 hidden border-t-2 border-dashed border-brand-200 dark:border-brand-800 lg:block"></div>
             @foreach([
-                ['icon' => '👤', 'title' => __('Create Account'), 'desc' => __('Register with your phone number in seconds.')],
-                ['icon' => '📚', 'title' => __('Select Course'), 'desc' => __('Choose the course that fits your level.')],
-                ['icon' => '▶️', 'title' => __('Watch & Learn'), 'desc' => __('Follow the lessons at your own pace.')],
-                ['icon' => '🧠', 'title' => __('Test Yourself'), 'desc' => __('Quizzes and assignments to prove your skills.')],
+                ['icon' => 'user-plus', 'title' => __('Create Account'), 'desc' => __('Register with your phone number in seconds.')],
+                ['icon' => 'book', 'title' => __('Select Course'), 'desc' => __('Choose the course that fits your level.')],
+                ['icon' => 'play', 'title' => __('Watch & Learn'), 'desc' => __('Follow the lessons at your own pace.')],
+                ['icon' => 'brain', 'title' => __('Test Yourself'), 'desc' => __('Quizzes and assignments to prove your skills.')],
             ] as $i => $step)
-                <div class="relative rounded-2xl border border-slate-200 bg-slate-50 p-6 text-center dark:border-slate-800 dark:bg-slate-950" data-reveal>
-                    <div class="relative mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-brand-600 text-3xl text-white shadow-lg shadow-brand-600/30">{{ $step['icon'] }}</div>
-                    <div class="mb-1 font-mono text-xs font-bold text-gold-500">{{ __('Step') }} {{ $i + 1 }}</div>
-                    <h3 class="font-bold">{{ $step['title'] }}</h3>
-                    <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">{{ $step['desc'] }}</p>
+                <div class="card-hover relative rounded-2xl border border-slate-200/80 bg-white p-7 text-center shadow-sm dark:border-slate-800 dark:bg-slate-950/60" data-reveal data-reveal-delay="{{ $i }}">
+                    <div class="relative mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-brand-600 to-fuchsia-600 text-white shadow-lg shadow-brand-500/30 animate-float" style="animation-delay: {{ $i * 0.8 }}s">
+                        <x-icon name="{{ $step['icon'] }}" class="h-7 w-7" :stroke="1.8"/>
+                    </div>
+                    <div class="mb-1.5 inline-flex rounded-full bg-gold-100 px-3 py-0.5 font-mono text-xs font-bold text-gold-700 dark:bg-gold-500/10 dark:text-gold-400">{{ __('Step') }} {{ $i + 1 }}</div>
+                    <h3 class="text-lg font-extrabold">{{ $step['title'] }}</h3>
+                    <p class="mt-1.5 text-sm text-slate-500 dark:text-slate-400">{{ $step['desc'] }}</p>
                 </div>
             @endforeach
         </div>
@@ -130,12 +138,13 @@
 </section>
 
 {{-- FAQ --}}
-<section id="faq" class="mx-auto max-w-3xl px-4 py-16 sm:px-6 lg:px-8">
-    <div class="mb-10 text-center" data-reveal>
-        <h2 class="text-3xl font-extrabold">{{ __('Frequently Asked Questions') }}</h2>
-        <p class="mt-2 text-slate-500 dark:text-slate-400">{{ __('Everything you need to know before you start.') }}</p>
+<section id="faq" class="mx-auto max-w-3xl px-4 py-20 sm:px-6 lg:px-8">
+    <div class="mb-12 text-center" data-reveal>
+        <span class="eyebrow"><x-icon name="chat" class="h-4 w-4" :stroke="2"/> {{ __('Help') }}</span>
+        <h2 class="mt-4 text-4xl font-extrabold sm:text-5xl">{{ __('Frequently Asked Questions') }}</h2>
+        <p class="mt-3 text-lg text-slate-500 dark:text-slate-400">{{ __('Everything you need to know before you start.') }}</p>
     </div>
-    <div class="space-y-3">
+    <div class="space-y-4">
         @foreach($faqs as $faq)
             <x-landing.faq-item :question="$faq['q']" :answer="$faq['a']" />
         @endforeach
@@ -143,49 +152,42 @@
 </section>
 
 {{-- Final CTA --}}
-<section class="px-4 pb-16 sm:px-6 lg:px-8">
-    <div class="relative mx-auto max-w-5xl overflow-hidden rounded-3xl bg-gradient-to-l from-brand-700 to-brand-900 px-6 py-14 text-center text-white shadow-2xl" data-reveal>
-        <div class="absolute -top-16 end-0 h-48 w-48 rounded-full bg-gold-500/20 blur-3xl"></div>
-        <h2 class="text-3xl font-extrabold sm:text-4xl">{{ __('Ready to start your journey?') }}</h2>
-        <p class="mx-auto mt-3 max-w-xl text-brand-100">{{ __('Create your account now and take the first step.') }}</p>
-        <div class="mt-8 flex flex-wrap justify-center gap-3">
-            <a href="{{ route('register') }}" class="rounded-xl bg-gold-500 px-6 py-3 font-semibold text-brand-950 shadow-lg transition hover:bg-gold-400">{{ __('Create Free Account') }}</a>
-            <a href="{{ route('login') }}" class="rounded-xl border border-white/30 px-6 py-3 font-semibold text-white transition hover:bg-white/10">{{ __('Login') }}</a>
+<section class="px-4 pb-20 sm:px-6 lg:px-8">
+    <div class="relative mx-auto max-w-5xl overflow-hidden rounded-[2rem] px-6 py-16 text-center text-white sm:py-20" data-reveal>
+        <div class="absolute inset-0 -z-10 bg-gradient-to-br from-brand-700 via-brand-600 to-fuchsia-700"></div>
+        <div class="blob -top-20 end-10 h-64 w-64 bg-gold-400/40"></div>
+        <div class="blob -bottom-24 start-6 h-64 w-64 bg-fuchsia-300/40" style="animation-delay:-7s"></div>
+        <h2 class="text-4xl font-extrabold sm:text-5xl">{{ __('Ready to start your journey?') }}</h2>
+        <p class="mx-auto mt-4 max-w-xl text-lg text-brand-100">{{ __('Create your account now and take the first step.') }}</p>
+        <div class="mt-9 flex flex-wrap justify-center gap-4">
+            <a href="{{ route('register') }}" class="btn-gold !px-8 !py-3.5 !text-base"><x-icon name="sparkles" class="h-5 w-5" :stroke="2"/> {{ __('Create Free Account') }}</a>
+            <a href="{{ route('login') }}" class="rounded-xl border-2 border-white/40 px-8 py-3.5 text-base font-bold text-white transition-all duration-300 hover:-translate-y-0.5 hover:bg-white/10 hover:shadow-xl">{{ __('Login') }}</a>
         </div>
     </div>
 </section>
 
 {{-- Contact Us (homepage only) --}}
-<section id="contact" class="border-t border-slate-200 bg-white py-16 dark:border-slate-800 dark:bg-slate-900">
+<section id="contact" class="border-t border-slate-200/70 bg-white/70 py-20 backdrop-blur dark:border-slate-800 dark:bg-slate-900/60">
     <div class="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
-        <div class="mb-10 text-center" data-reveal>
-            <h2 class="text-3xl font-extrabold">{{ __('Contact') }}</h2>
-            <p class="mt-2 text-slate-500 dark:text-slate-400">{{ __('Have a question? Reach out anytime.') }}</p>
+        <div class="mb-12 text-center" data-reveal>
+            <span class="eyebrow"><x-icon name="phone" class="h-4 w-4" :stroke="2"/> {{ __('Contact') }}</span>
+            <h2 class="mt-4 text-4xl font-extrabold sm:text-5xl">{{ __('Have a question?') }}</h2>
+            <p class="mt-3 text-lg text-slate-500 dark:text-slate-400">{{ __('Reach out anytime.') }}</p>
         </div>
 
         <div class="grid gap-6 sm:grid-cols-2" data-reveal>
-            {{-- Phone --}}
             <a href="tel:+201068014651"
-               class="group flex items-center gap-4 rounded-2xl border border-slate-200 bg-slate-50 p-6 transition hover:-translate-y-1 hover:border-brand-400 hover:shadow-lg dark:border-slate-800 dark:bg-slate-950 dark:hover:border-brand-600">
-                <span class="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-brand-600/10 text-brand-600 transition group-hover:bg-brand-600 group-hover:text-white dark:bg-gold-500/10 dark:text-gold-400 dark:group-hover:bg-gold-500 dark:group-hover:text-brand-950">
-                    <svg class="h-7 w-7" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 002.25-2.25v-1.372c0-.516-.351-.966-.852-1.091l-4.423-1.106c-.44-.11-.902.055-1.173.417l-.97 1.293c-.282.376-.769.542-1.21.38a12.035 12.035 0 01-7.143-7.143c-.162-.441.004-.928.38-1.21l1.293-.97c.363-.271.527-.734.417-1.173L6.963 3.102a1.125 1.125 0 00-1.091-.852H4.5A2.25 2.25 0 002.25 4.5v2.25z"/>
-                    </svg>
-                </span>
+               class="card-hover group flex items-center gap-4 rounded-2xl border border-slate-200/80 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-950/60">
+                <span class="icon-tile-soft !h-14 !w-14 !rounded-2xl"><x-icon name="phone" class="h-6 w-6" :stroke="1.8"/></span>
                 <span class="min-w-0">
                     <span class="block text-sm font-semibold text-slate-500 dark:text-slate-400">{{ __('Phone') }}</span>
                     <span class="block truncate font-mono text-lg font-bold text-slate-900 dark:text-white" dir="ltr">01068014651</span>
                 </span>
             </a>
 
-            {{-- Email --}}
             <a href="mailto:ahmedaref009988@gmail.com"
-               class="group flex items-center gap-4 rounded-2xl border border-slate-200 bg-slate-50 p-6 transition hover:-translate-y-1 hover:border-brand-400 hover:shadow-lg dark:border-slate-800 dark:bg-slate-950 dark:hover:border-brand-600">
-                <span class="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-brand-600/10 text-brand-600 transition group-hover:bg-brand-600 group-hover:text-white dark:bg-gold-500/10 dark:text-gold-400 dark:group-hover:bg-gold-500 dark:group-hover:text-brand-950">
-                    <svg class="h-7 w-7" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75"/>
-                    </svg>
-                </span>
+               class="card-hover group flex items-center gap-4 rounded-2xl border border-slate-200/80 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-950/60">
+                <span class="icon-tile-soft !h-14 !w-14 !rounded-2xl"><x-icon name="mail" class="h-6 w-6" :stroke="1.8"/></span>
                 <span class="min-w-0">
                     <span class="block text-sm font-semibold text-slate-500 dark:text-slate-400">{{ __('Email') }}</span>
                     <span class="block truncate font-mono text-sm font-bold text-slate-900 dark:text-white sm:text-base" dir="ltr">ahmedaref009988@gmail.com</span>
@@ -200,7 +202,7 @@
    target="_blank"
    rel="noopener noreferrer"
    aria-label="{{ __('Contact') }}"
-   class="fixed bottom-6 right-6 z-50 flex items-center gap-2 rounded-full bg-[#25D366] px-5 py-3 text-sm font-bold text-white shadow-lg shadow-[#25D366]/40 transition-all duration-300 hover:-translate-y-1 hover:bg-[#1ebe5d] hover:shadow-xl">
+   class="fixed bottom-6 right-6 z-50 flex items-center gap-2 rounded-full bg-gradient-to-br from-emerald-500 to-green-600 px-5 py-3 text-sm font-bold text-white shadow-xl shadow-emerald-500/40 transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl hover:shadow-emerald-500/50">
     <svg class="h-6 w-6 shrink-0" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
         <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
     </svg>

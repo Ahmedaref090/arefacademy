@@ -41,6 +41,12 @@ class EnsureActiveSubscription
             return $next($request);
         }
 
+        // Month-scoped access: approved month subscription OR an active manual
+        // enrollment for this lesson's month.
+        if ($lesson && $user->canAccessLesson($lesson)) {
+            return $next($request);
+        }
+
         $message = $user->isEnrolledIn($course)
             ? 'Your subscription to this course has expired. Renew your subscription to keep learning.'
             : 'This content is only available to enrolled students with an active subscription.';

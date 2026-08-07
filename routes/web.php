@@ -8,11 +8,15 @@ use App\Http\Controllers\CourseThumbnailController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\LocaleController;
 use App\Http\Controllers\PaymentController;
+use App\Http\Controllers\SitemapController;
 use App\Http\Controllers\Student;
 use Illuminate\Support\Facades\Route;
 
 // ── Public landing page ───────────────────────────────────────
 Route::get('/', HomeController::class)->name('home');
+
+// ── SEO: dynamic sitemap (crawlers fetch this frequently) ─────
+Route::get('sitemap.xml', [SitemapController::class, 'index'])->name('sitemap');
 
 // ── Course thumbnails (streamed from the private disk) ────────
 Route::get('courses/{course}/thumbnail', CourseThumbnailController::class)->name('courses.thumbnail');
@@ -38,13 +42,19 @@ Route::middleware('auth')->group(function () {
 
     Route::get('courses', [Student\CourseController::class, 'index'])->name('courses.index');
     Route::get('courses/my', [Student\CourseController::class, 'my'])->name('courses.my');
+    Route::get('courses/{course:id}/months', [Student\CourseController::class, 'months'])->name('courses.months');
     Route::get('courses/{course:slug}', [Student\CourseController::class, 'show'])->name('courses.show');
+
+    Route::get('my-invoices', [Student\InvoiceController::class, 'index'])->name('invoices.index');
 
     Route::get('lessons/{lesson}', [Student\LessonController::class, 'show'])->name('lessons.show');
     Route::post('lessons/{lesson}/complete', [Student\LessonController::class, 'complete'])->name('lessons.complete');
     Route::post('lessons/{lesson}/progress', [Student\LessonController::class, 'progress'])->name('lessons.progress');
 
     Route::get('attachments/{attachment}/download', AttachmentDownloadController::class)->name('attachments.download');
+
+    // Secure R2 playback — temporary URL for streaming a lesson video.
+    Route::get('lessons/{lesson}/video-url', [Student\LessonController::class, 'videoUrl'])->name('lessons.video-url');
 
     Route::get('quizzes/{quiz}', [Student\QuizController::class, 'show'])->name('quizzes.show');
     Route::post('quizzes/{quiz}/start', [Student\QuizController::class, 'start'])->name('quizzes.start');
@@ -56,6 +66,8 @@ Route::middleware('auth')->group(function () {
     Route::get('submissions/{submission}/download', [Student\AssignmentController::class, 'download'])->name('submissions.download');
 
     // ── Account section (vertical nav menu) ───────────────────
+    Route::get('contact', [Student\ContactController::class, 'index'])->name('contact');
+
     Route::get('profile', [Student\ProfileController::class, 'edit'])->name('profile.edit');
     Route::put('profile', [Student\ProfileController::class, 'update'])->name('profile.update');
     Route::get('account/security', [Student\AccountController::class, 'security'])->name('account.security');
@@ -73,6 +85,7 @@ Route::middleware('auth')->group(function () {
 
     Route::get('courses/{course:slug}/checkout', [PaymentController::class, 'checkout'])->name('payments.checkout');
     Route::post('courses/{course:slug}/pay', [PaymentController::class, 'pay'])->name('payments.pay');
+    Route::get('payments/{payment}/receipt', [PaymentController::class, 'receipt'])->name('payments.receipt');
     Route::get('payments/{payment}', [PaymentController::class, 'show'])->name('payments.show');
 });
 
@@ -104,8 +117,14 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::get('students/{user}', [Admin\StudentController::class, 'show'])->name('students.show');
     Route::post('students/{user}/password', [Admin\StudentController::class, 'resetPassword'])->name('students.password');
 
+    Route::get('students/{user}/devices', [Admin\DeviceController::class, 'index'])->name('students.devices');
+    Route::delete('students/{user}/devices/{device}', [Admin\DeviceController::class, 'destroy'])->name('students.devices.destroy');
+
     Route::get('submissions', [Admin\SubmissionController::class, 'index'])->name('submissions.index');
     Route::post('submissions/{submission}/grade', [Admin\SubmissionController::class, 'grade'])->name('submissions.grade');
+
+    // Cloudflare R2 — presigned upload (file goes straight from the browser).
+    Route::post('videos/presigned-upload', [Admin\VideoController::class, 'presignedUpload'])->name('videos.presigned-upload');
 
     Route::get('payments', [Admin\PaymentController::class, 'index'])->name('payments.index');
     Route::post('payments/{payment}/approve', [Admin\PaymentController::class, 'approve'])->name('payments.approve');
@@ -113,4 +132,6 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
 
     Route::post('enrollments', [Admin\EnrollmentController::class, 'store'])->name('enrollments.store');
     Route::delete('enrollments/{enrollment}', [Admin\EnrollmentController::class, 'destroy'])->name('enrollments.destroy');
+    Route::post('students/{user}/months/{courseMonth}/revoke', [Admin\EnrollmentController::class, 'destroyMonth'])->name('enrollments.month.revoke');
+    Route::get('courses/{course:id}/months', [Admin\EnrollmentController::class, 'months'])->name('courses.months');
 });

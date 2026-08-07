@@ -6,7 +6,7 @@ use App\Models\Course;
 use App\Models\Payment;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\Http;
+use Illuminate\Http\UploadedFile;
 use Tests\TestCase;
 
 class EnrollmentTest extends TestCase
@@ -29,24 +29,20 @@ class EnrollmentTest extends TestCase
         ]);
     }
 
-    public function test_paid_course_creates_fawry_payment_and_pending_enrollment(): void
+    public function test_paid_course_creates_pending_payment_and_enrollment(): void
     {
-        config()->set('fawry.merchant_code', 'test-merchant');
-        config()->set('fawry.security_key', 'test-key');
-
-        Http::fake([
-            '*' => Http::response(['referenceNumber' => '987654321'], 200),
-        ]);
-
         $student = User::factory()->create();
         $course = Course::factory()->create(['price' => 250, 'is_published' => true]);
 
-        $this->actingAs($student)->post(route('payments.pay', $course));
+        $this->actingAs($student)->post(route('payments.pay', $course), [
+            'payment_method' => 'vodafone_cash',
+            'sender_details' => '01234567890',
+            'receipt' => UploadedFile::fake()->image('receipt.jpg'),
+        ]);
 
         $payment = Payment::where('user_id', $student->id)->first();
 
         $this->assertNotNull($payment);
-        $this->assertEquals('987654321', $payment->fawry_reference_number);
         $this->assertEquals('250.00', $payment->amount);
         $this->assertDatabaseHas('enrollments', [
             'user_id' => $student->id,
@@ -61,7 +57,8 @@ class EnrollmentTest extends TestCase
         $course = Course::factory()->create(['price' => 0, 'is_published' => true]);
 
         $this->actingAs($student)->post(route('payments.pay', $course));
-        $this->actingAs($student)->post(route('payments.pay', $course))->assertForbidden();
+        $this->actingAs($student)->post(route('payments.pay', $course))
+            ->assertRedirect(route('courses.show', $course));
     }
 
     public function test_unpublished_course_cannot_be_purchased(): void

@@ -22,7 +22,7 @@ class CourseController extends Controller
     public function create()
     {
         return view('admin.courses.create', [
-            'course' => new Course(),
+            'course' => new Course,
             'grades' => GradeLevel::cases(),
             'pricingTypes' => PricingType::cases(),
         ]);
@@ -31,7 +31,9 @@ class CourseController extends Controller
     public function store(Request $request)
     {
         $data = $this->validateCourse($request);
-        $data['slug'] = $this->uniqueSlug($data['slug'] ?: $data['title']);
+        $data['title'] = $this->translationsFrom($data, 'title');
+        $data['description'] = $this->translationsFrom($data, 'description');
+        $data['slug'] = $this->uniqueSlug($data['slug'] ?: ($data['title']['ar'] ?: $data['title']['en']));
         $data['is_published'] = $request->boolean('is_published');
 
         if ($request->hasFile('thumbnail')) {
@@ -40,7 +42,7 @@ class CourseController extends Controller
 
         Course::create($data);
 
-        return redirect()->route('admin.courses.index')->with('status', 'Course created.');
+        return redirect()->route('admin.courses.index')->with('status', __('Course created.'));
     }
 
     public function edit(Course $course)
@@ -57,7 +59,9 @@ class CourseController extends Controller
     public function update(Request $request, Course $course)
     {
         $data = $this->validateCourse($request);
-        $data['slug'] = $this->uniqueSlug($data['slug'] ?: $data['title'], $course->id);
+        $data['title'] = $this->translationsFrom($data, 'title');
+        $data['description'] = $this->translationsFrom($data, 'description');
+        $data['slug'] = $this->uniqueSlug($data['slug'] ?: ($data['title']['ar'] ?: $data['title']['en']), $course->id);
         $data['is_published'] = $request->boolean('is_published');
 
         if ($request->hasFile('thumbnail')) {
@@ -66,22 +70,24 @@ class CourseController extends Controller
 
         $course->update($data);
 
-        return redirect()->route('admin.courses.edit', $course)->with('status', 'Course updated.');
+        return redirect()->route('admin.courses.edit', $course)->with('status', __('Course updated.'));
     }
 
     public function destroy(Course $course)
     {
         $course->delete();
 
-        return redirect()->route('admin.courses.index')->with('status', 'Course deleted.');
+        return redirect()->route('admin.courses.index')->with('status', __('Course deleted.'));
     }
 
     protected function validateCourse(Request $request): array
     {
         return $request->validate([
-            'title' => ['required', 'string', 'max:255'],
+            'title_ar' => ['required', 'string', 'max:255'],
+            'title_en' => ['nullable', 'string', 'max:255'],
+            'description_ar' => ['nullable', 'string'],
+            'description_en' => ['nullable', 'string'],
             'slug' => ['nullable', 'string', 'max:255'],
-            'description' => ['nullable', 'string'],
             'price' => ['required', 'numeric', 'min:0'],
             'sale_price' => ['nullable', 'numeric', 'min:0', 'lt:price'],
             'pricing_type' => ['required', Rule::enum(PricingType::class)],
@@ -93,6 +99,22 @@ class CourseController extends Controller
         ]);
     }
 
+    /**
+     * Turn flat "<column>_ar"/"<column>_en" request data into a translatable
+     * {ar, en} array, removing the flat keys from the payload.
+     */
+    protected function translationsFrom(array &$data, string $column): array
+    {
+        $translations = [
+            'ar' => $data["{$column}_ar"] ?? '',
+            'en' => $data["{$column}_en"] ?? '',
+        ];
+
+        unset($data["{$column}_ar"], $data["{$column}_en"]);
+
+        return $translations;
+    }
+
     protected function uniqueSlug(string $value, ?int $ignoreId = null): string
     {
         $base = Str::slug($value) ?: 'course';
@@ -100,7 +122,7 @@ class CourseController extends Controller
         $i = 1;
 
         while (Course::where('slug', $slug)->when($ignoreId, fn ($q) => $q->where('id', '!=', $ignoreId))->exists()) {
-            $slug = $base . '-' . $i++;
+            $slug = $base.'-'.$i++;
         }
 
         return $slug;

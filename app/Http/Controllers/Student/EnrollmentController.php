@@ -19,41 +19,50 @@ class EnrollmentController extends Controller
      */
     public function store(Request $request)
     {
-        $request->validate([
+        $courseId = $request->validate([
             'course_id' => ['required', 'exists:courses,id'],
-        ]);
+        ])['course_id'];
 
-        $course = Course::findOrFail($request->input('course_id'));
+        $course = Course::findOrFail($courseId);
 
         // Full-course (lifetime) purchases go straight to checkout, no month needed.
         if (! $course->isPerMonth()) {
             return redirect()->route('payments.checkout', $course);
         }
 
-        // course_month_id is required for per-month courses.
+        // One or more months are required for per-month courses.
         $data = $request->validate([
-            'course_month_id' => ['required', 'exists:course_months,id'],
+            'course_month_ids' => ['required', 'array', 'min:1'],
+            'course_month_ids.*' => ['required', 'integer', 'distinct'],
         ]);
 
-        // 404 if the selected month does not belong to this course.
-        $month = $course->months()->findOrFail($data['course_month_id']);
+        // 404-equivalent guard: the selected months MUST belong to this course.
+        $monthIds = collect(array_unique(array_map('intval', $data['course_month_ids'])))->values();
+        $months = $course->months()->whereIn('id', $monthIds)->get();
 
-        // Double-subscription prevention: don't let the student reach checkout
-        // for a month that is already pending or approved.
-        $alreadySubscribed = $request->user()->courseMonths()
-            ->wherePivot('course_month_id', $month->id)
-            ->wherePivotIn('status', [PurchaseStatus::Pending, PurchaseStatus::Approved])
-            ->exists();
-
-        if ($alreadySubscribed) {
-            return back()->with('error', __('messages.already_subscribed'));
+        if ($months->count() !== $monthIds->count()) {
+            return back()
+                ->withErrors(['course_month_ids' => __('One or more selected months are invalid.')])
+                ->withInput();
         }
 
-        // Hand off to checkout, carrying the selected month in the query string:
-        // /courses/{course}/checkout?course_month_id={id}
+        // Double-subscription prevention for every selected month.
+        foreach ($months as $month) {
+            $alreadySubscribed = $request->user()->courseMonths()
+                ->wherePivot('course_month_id', $month->id)
+                ->wherePivotIn('status', [PurchaseStatus::Pending, PurchaseStatus::Approved])
+                ->exists();
+
+            if ($alreadySubscribed) {
+                return back()->with('error', __('messages.already_subscribed'));
+            }
+        }
+
+        // Hand off to checkout carrying every selected month:
+        // /courses/{course}/checkout?course_month_ids[]=…&course_month_ids[]=…
         return redirect()->route('payments.checkout', [
             'course' => $course,
-            'course_month_id' => $month->id,
+            'course_month_ids' => $monthIds->map(fn ($id) => (string) $id)->all(),
         ]);
     }
 }

@@ -82,6 +82,15 @@ class User extends Authenticatable
         return $this->hasMany(LoginHistory::class);
     }
 
+    /**
+     * The distinct devices this user has logged in from (max 3).
+     * Each row is keyed by a long-lived encrypted device_uuid cookie.
+     */
+    public function devices(): HasMany
+    {
+        return $this->hasMany(UserDevice::class);
+    }
+
     public function completedLessons(): BelongsToMany
     {
         return $this->belongsToMany(Lesson::class, 'lesson_user')
@@ -152,16 +161,31 @@ class User extends Authenticatable
     }
 
     /**
-     * The student's active enrollment record for a course, if any.
+     * The student's active full-course enrollment record (course_month_id = null),
+     * if any. Month-scoped enrollments are NOT considered "full-course" here.
      * Note: an "active" enrollment may still be expired (expires_at in the past).
      */
     public function activeEnrollmentIn(Course $course): ?Enrollment
     {
         return $this->enrollments()
             ->where('course_id', $course->id)
+            ->whereNull('course_month_id')
             ->where('status', EnrollmentStatus::Active)
             ->latest('enrolled_at')
             ->first();
+    }
+
+    /**
+     * True when the student has an active (non-expired) enrollment scoped to a
+     * specific course month — e.g. a manual admin enrollment for monthly access.
+     */
+    public function hasActiveEnrollmentForMonth(int $courseMonthId): bool
+    {
+        return $this->enrollments()
+            ->where('course_month_id', $courseMonthId)
+            ->where('status', EnrollmentStatus::Active)
+            ->where(fn ($q) => $q->whereNull('expires_at')->orWhere('expires_at', '>', now()))
+            ->exists();
     }
 
     /**
@@ -195,10 +219,14 @@ class User extends Authenticatable
         }
 
         if ($lesson->course_month_id) {
-            return $this->courseMonths()
+            if ($this->courseMonths()
                 ->where('course_months.id', $lesson->course_month_id)
                 ->wherePivot('status', PurchaseStatus::Approved)
-                ->exists();
+                ->exists()) {
+                return true;
+            }
+
+            return $this->hasActiveEnrollmentForMonth($lesson->course_month_id);
         }
 
         return false;
@@ -286,7 +314,7 @@ class User extends Authenticatable
                 return $two;
             }
 
-            return $value . ' ' . ($value <= 10 ? $many : $one);
+            return $value.' '.($value <= 10 ? $many : $one);
         }
 
         return 'دلوقتي';

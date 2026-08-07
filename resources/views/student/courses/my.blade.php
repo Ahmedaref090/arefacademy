@@ -1,5 +1,5 @@
 @extends('layouts.app')
-@section('title', 'My Courses – Aref Academy')
+@section('title', __('My Courses – Aref Academy'))
 
 @section('content')
 @php
@@ -16,8 +16,8 @@
     <div class="pointer-events-none absolute -bottom-12 -right-8 h-48 w-48 rounded-full bg-purple-300/20 blur-2xl"></div>
     <div class="relative flex flex-wrap items-center justify-between gap-4">
         <div>
-            <h1 class="text-2xl font-bold sm:text-3xl">🎓 My Learning Journey</h1>
-            <p class="mt-1 text-sm text-indigo-100">Track your progress and pick up right where you left off.</p>
+            <h1 class="text-2xl font-bold sm:text-3xl">{{ __('🎓 My Learning Journey') }}</h1>
+            <p class="mt-1 text-sm text-indigo-100">{{ __('Track your progress and pick up right where you left off.') }}</p>
         </div>
         <div class="flex gap-3 text-center">
             <div class="rounded-xl bg-white/15 px-4 py-2 backdrop-blur">
@@ -26,7 +26,7 @@
             </div>
             <div class="rounded-xl bg-white/15 px-4 py-2 backdrop-blur">
                 <div class="text-xl font-bold">{{ $avgProgress }}%</div>
-                <div class="text-xs text-indigo-100">Avg. progress</div>
+                <div class="text-xs text-indigo-100">{{ __('Avg. progress') }}</div>
             </div>
         </div>
     </div>
@@ -36,7 +36,7 @@
 @if($enrollments->isNotEmpty())
     <h2 class="mb-4 flex items-center gap-2 font-semibold">
         <span class="flex h-7 w-7 items-center justify-center rounded-lg bg-indigo-100 text-sm dark:bg-indigo-500/10">📖</span>
-        Full Courses
+        {{ __('Full Courses') }}
     </h2>
     <div class="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
         @foreach($enrollments as $enrollment)
@@ -56,15 +56,20 @@
                         </div>
                     @endif
                     <span class="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-black/50 to-transparent"></span>
-                    <span class="absolute bottom-2 left-3 text-xs font-medium text-white/90">{{ $course->lessons->count() }} lessons</span>
+                    <span class="absolute bottom-2 left-3 text-xs font-medium text-white/90">{{ __(':count lessons', ['count' => $course->lessons->count()]) }}</span>
                     @if($progress === 100)
-                        <span class="absolute right-3 top-3 rounded-full bg-emerald-500 px-2.5 py-1 text-xs font-semibold text-white shadow">✓ Completed</span>
+                        <span class="absolute right-3 top-3 rounded-full bg-emerald-500 px-2.5 py-1 text-xs font-semibold text-white shadow">{{ __('✓ Completed') }}</span>
                     @endif
                 </a>
                 <div class="p-4">
-                    <a class="font-semibold transition-colors hover:text-indigo-600 dark:hover:text-indigo-400" href="{{ route('courses.show', $course) }}">{{ $course->title }}</a>
+                    <div class="flex flex-wrap items-center gap-1.5">
+                        <a class="font-semibold transition-colors hover:text-indigo-600 dark:hover:text-indigo-400" href="{{ route('courses.show', $course) }}">{{ $course->title }}</a>
+                        @if($enrollment->month)
+                            <span class="badge bg-emerald-100 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400">{{ $enrollment->month->name }}</span>
+                        @endif
+                    </div>
                     <div class="mt-3 flex items-center justify-between text-xs text-gray-500 dark:text-gray-400">
-                        <span>Progress</span>
+                        <span>{{ __('Progress') }}</span>
                         <span class="font-semibold text-indigo-600 dark:text-indigo-400">{{ $progress }}%</span>
                     </div>
                     <div class="mt-1 h-2 overflow-hidden rounded-full bg-gray-200 dark:bg-gray-800">
@@ -72,7 +77,7 @@
                     </div>
                     @if($firstLesson)
                         <a href="{{ route('lessons.show', $firstLesson) }}" class="btn mt-4 w-full transition-transform duration-200 group-hover:scale-[1.02]">
-                            {{ $progress > 0 && $progress < 100 ? 'Continue Learning →' : ($progress === 100 ? 'Review Course →' : 'Start Learning →') }}
+                            {{ $progress > 0 && $progress < 100 ? __('Continue Learning →') : ($progress === 100 ? __('Review Course →') : __('Start Learning →')) }}
                         </a>
                     @endif
                 </div>
@@ -85,7 +90,7 @@
 @if($monthlyCourses->isNotEmpty())
     <h2 class="mb-4 mt-10 flex items-center gap-2 font-semibold">
         <span class="flex h-7 w-7 items-center justify-center rounded-lg bg-emerald-100 text-sm dark:bg-emerald-500/10">🗓️</span>
-        Monthly Subscriptions
+        {{ __('Monthly Subscriptions') }}
     </h2>
     <div class="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
         @foreach($monthlyCourses as $months)
@@ -105,7 +110,7 @@
                     @endif
                     <span class="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-black/50 to-transparent"></span>
                     <span class="absolute bottom-2 left-3 text-xs font-medium text-white/90">
-                        {{ $months->count() }} {{ \Illuminate\Support\Str::plural('month', $months->count()) }} subscribed
+                        {{ $months->count() }} {{ \Illuminate\Support\Str::plural('month', $months->count()) }} {{ __('subscribed') }}
                     </span>
                 </a>
                 <div class="p-4">
@@ -115,9 +120,9 @@
                             <span class="badge bg-emerald-100 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400">✓ {{ $month->name }}</span>
                         @endforeach
                     </div>
-                    <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">Access limited to your subscribed months.</p>
+                    <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">{{ __('Access limited to your subscribed months.') }}</p>
                     @if($firstLesson)
-                        <a href="{{ route('lessons.show', $firstLesson) }}" class="btn mt-4 w-full transition-transform duration-200 group-hover:scale-[1.02]">Continue Learning →</a>
+                        <a href="{{ route('lessons.show', $firstLesson) }}" class="btn mt-4 w-full transition-transform duration-200 group-hover:scale-[1.02]">{{ __('Continue Learning →') }}</a>
                     @endif
                 </div>
             </div>
@@ -129,11 +134,11 @@
 @if($enrollments->isEmpty() && $approvedMonths->isEmpty())
     <div class="card flex flex-col items-center py-16 text-center">
         <div class="mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-indigo-100 text-4xl dark:bg-indigo-500/10">📚</div>
-        <h2 class="text-lg font-semibold">No courses yet</h2>
+        <h2 class="text-lg font-semibold">{{ __('No courses yet') }}</h2>
         <p class="mt-1 max-w-sm text-sm text-gray-500 dark:text-gray-400">
-            Once you enroll in a course or subscribe to a month, it will show up here with your progress.
+            {{ __('Once you enroll in a course or subscribe to a month, it will show up here with your progress.') }}
         </p>
-        <a href="{{ route('courses.index') }}" class="btn mt-6">Browse Courses →</a>
+        <a href="{{ route('courses.index') }}" class="btn mt-6">{{ __('Browse Courses →') }}</a>
     </div>
 @endif
 @endsection

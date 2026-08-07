@@ -7,6 +7,7 @@ use App\Enums\PaymentStatus;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class Payment extends Model
 {
@@ -42,10 +43,36 @@ class Payment extends Model
     /**
      * The specific month this payment is for (per-month courses only).
      * Null for full-course (lifetime) payments.
+     *
+     * @deprecated A single receipt may now cover multiple months; use courseMonths().
      */
     public function courseMonth(): BelongsTo
     {
         return $this->belongsTo(CourseMonth::class);
+    }
+
+    /**
+     * Every course month covered by this single receipt. A receipt can be
+     * consolidated across several months of a per-month course, but may also
+     * contain zero months for a full-course (lifetime) payment.
+     */
+    public function courseMonths(): BelongsToMany
+    {
+        return $this->belongsToMany(CourseMonth::class, 'course_month_payment')
+            ->orderBy('course_months.sort_order');
+    }
+
+    /**
+     * The months this receipt covers, supporting both the new consolidated
+     * pivot relationship and legacy single-month receipts (course_month_id).
+     */
+    public function displayMonths(): \Illuminate\Support\Collection
+    {
+        if ($this->courseMonths->isNotEmpty()) {
+            return $this->courseMonths;
+        }
+
+        return $this->course_month_id ? collect([$this->courseMonth]) : collect();
     }
 
     public function enrollment(): BelongsTo

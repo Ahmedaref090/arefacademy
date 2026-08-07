@@ -10,8 +10,8 @@ enum PricingType: string
     public function label(): string
     {
         return match ($this) {
-            self::Lifetime => 'Lifetime',
-            self::PerMonth => 'Per Month',
+            self::Lifetime => __('Lifetime'),
+            self::PerMonth => __('Per Month'),
         };
     }
 }

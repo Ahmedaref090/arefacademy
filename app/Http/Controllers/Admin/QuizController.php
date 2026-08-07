@@ -14,7 +14,7 @@ class QuizController extends Controller
     {
         return view('admin.quizzes.create', [
             'lesson' => $lesson,
-            'quiz' => new Quiz(),
+            'quiz' => new Quiz,
         ]);
     }
 
@@ -23,8 +23,8 @@ class QuizController extends Controller
         $data = $this->validateQuiz($request);
 
         $quiz = $lesson->quizzes()->create([
-            'title' => $data['title'],
-            'description' => $data['description'] ?? null,
+            'title' => $this->translationsFrom($data, 'title'),
+            'description' => $this->translationsFrom($data, 'description'),
             'pass_score' => $data['pass_score'],
             'time_limit_minutes' => $data['time_limit_minutes'] ?? null,
             'max_attempts' => $data['max_attempts'] ?? null,
@@ -32,7 +32,7 @@ class QuizController extends Controller
 
         $this->syncQuestions($quiz, $data['questions']);
 
-        return redirect()->route('admin.lessons.edit', $lesson)->with('status', 'Quiz created.');
+        return redirect()->route('admin.lessons.edit', $lesson)->with('status', __('Quiz created.'));
     }
 
     public function edit(Quiz $quiz)
@@ -51,8 +51,8 @@ class QuizController extends Controller
         $data = $this->validateQuiz($request);
 
         $quiz->update([
-            'title' => $data['title'],
-            'description' => $data['description'] ?? null,
+            'title' => $this->translationsFrom($data, 'title'),
+            'description' => $this->translationsFrom($data, 'description'),
             'pass_score' => $data['pass_score'],
             'time_limit_minutes' => $data['time_limit_minutes'] ?? null,
             'max_attempts' => $data['max_attempts'] ?? null,
@@ -60,7 +60,7 @@ class QuizController extends Controller
 
         $this->syncQuestions($quiz, $data['questions']);
 
-        return redirect()->route('admin.lessons.edit', $quiz->lesson)->with('status', 'Quiz updated.');
+        return redirect()->route('admin.lessons.edit', $quiz->lesson)->with('status', __('Quiz updated.'));
     }
 
     public function destroy(Quiz $quiz)
@@ -68,14 +68,16 @@ class QuizController extends Controller
         $lesson = $quiz->lesson;
         $quiz->delete();
 
-        return redirect()->route('admin.lessons.edit', $lesson)->with('status', 'Quiz deleted.');
+        return redirect()->route('admin.lessons.edit', $lesson)->with('status', __('Quiz deleted.'));
     }
 
     protected function validateQuiz(Request $request): array
     {
         $data = $request->validate([
-            'title' => ['required', 'string', 'max:255'],
-            'description' => ['nullable', 'string'],
+            'title_ar' => ['required', 'string', 'max:255'],
+            'title_en' => ['nullable', 'string', 'max:255'],
+            'description_ar' => ['nullable', 'string'],
+            'description_en' => ['nullable', 'string'],
             'pass_score' => ['required', 'integer', 'min:0', 'max:100'],
             'time_limit_minutes' => ['nullable', 'integer', 'min:1'],
             'max_attempts' => ['nullable', 'integer', 'min:1'],
@@ -89,12 +91,28 @@ class QuizController extends Controller
         foreach ($data['questions'] as $i => $question) {
             if ((int) $question['correct'] >= count($question['options'])) {
                 throw ValidationException::withMessages([
-                    "questions.$i.correct" => 'Correct option index is out of range.',
+                    "questions.$i.correct" => __('The correct option is out of range.'),
                 ]);
             }
         }
 
         return $data;
+    }
+
+    /**
+     * Turn flat "<column>_ar"/"<column>_en" request data into a translatable
+     * {ar, en} array, removing the flat keys from the payload.
+     */
+    protected function translationsFrom(array &$data, string $column): array
+    {
+        $translations = [
+            'ar' => $data["{$column}_ar"] ?? '',
+            'en' => $data["{$column}_en"] ?? '',
+        ];
+
+        unset($data["{$column}_ar"], $data["{$column}_en"]);
+
+        return $translations;
     }
 
     protected function syncQuestions(Quiz $quiz, array $questions): void

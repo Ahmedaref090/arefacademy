@@ -10,6 +10,10 @@ enum EnrollmentStatus: string
 
     public function label(): string
     {
-        return ucfirst($this->value);
+        return match ($this) {
+            self::Pending => __('Pending'),
+            self::Active => __('Active'),
+            self::Expired => __('Expired'),
+        };
     }
 }

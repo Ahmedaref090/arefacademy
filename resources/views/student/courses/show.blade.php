@@ -1,5 +1,17 @@
 @extends('layouts.app')
-@section('title', $course->title . ' – Aref Academy')
+@php
+    // Clean, trimmed description for SEO meta tags (strip tags + clamp length).
+    $seoDescription = mb_substr(strip_tags((string) $course->description), 0, 160);
+@endphp
+@section('title', $course->title . ' – ' . __('Aref Academy'))
+@section('meta_description', $seoDescription)
+@section('meta_keywords', $course->title)
+@section('canonical', route('courses.show', $course))
+@section('url_ar', url(route('courses.show', $course, false)))
+@section('url_en', url(route('courses.show', $course, false)))
+@section('og_type', 'product')
+@section('og_image', $course->thumbnailUrl() ?? asset('images/og-default.jpg'))
+@section('twitter_site', '@arefacademy')
 
 @section('content')
 @php
@@ -20,18 +32,18 @@
             <div class="mb-3 flex flex-wrap items-center gap-2 text-xs font-medium">
                 <span class="inline-flex items-center gap-1 rounded-full bg-white/15 px-3 py-1 backdrop-blur">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="h-3.5 w-3.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.347a1.125 1.125 0 0 1 0 1.972l-11.54 6.347a1.125 1.125 0 0 1-1.667-.986V5.653Z" /></svg>
-                    {{ $lessonCount }} lessons
+                    {{ __(':count lessons', ['count' => $lessonCount]) }}
                 </span>
                 @if($course->grade_level)
                     <span class="rounded-full bg-white/15 px-3 py-1 backdrop-blur">{{ $course->grade_level->label() }}</span>
                 @endif
                 @if($course->duration_weeks)
-                    <span class="rounded-full bg-white/15 px-3 py-1 backdrop-blur">{{ $course->duration_weeks }} weeks</span>
+                    <span class="rounded-full bg-white/15 px-3 py-1 backdrop-blur">{{ __(':count weeks', ['count' => $course->duration_weeks]) }}</span>
                 @endif
             </div>
             <h1 class="text-3xl font-extrabold tracking-tight sm:text-4xl">{{ $course->title }}</h1>
             <p class="mt-2 text-sm text-indigo-100">
-                {{ $isPerMonth ? 'Subscribe month by month and learn at your own pace.' : 'Full access to every lesson with a single enrollment.' }}
+                {{ $isPerMonth ? __('Subscribe month by month and learn at your own pace.') : __('Full access to every lesson with a single enrollment.') }}
             </p>
         </div>
 
@@ -39,70 +51,87 @@
         <div class="w-full shrink-0 lg:w-80">
             <div class="rounded-2xl border border-white/20 bg-white/10 p-5 backdrop-blur-md">
                 <div class="text-xs font-medium uppercase tracking-wide text-indigo-100">
-                    {{ $isPerMonth ? 'Price / month' : 'Full course' }}
+                    {{ $isPerMonth ? __('Price / month') : __('Full course') }}
                 </div>
                 <div class="mt-1 text-3xl font-extrabold text-white">
-                    {{ (float) $course->price > 0 ? number_format($course->price, 2) . ' EGP' : 'Free' }}
+                    {{ (float) $course->price > 0 ? number_format($course->price, 2) . ' ' . __('EGP') : __('Free') }}
                 </div>
 
                 @if($isPerMonth)
-                    {{-- Per-month course: the student must pick WHICH month to subscribe to. --}}
+                    {{-- Per-month course: pick one or MORE months; price is reactive. --}}
                     @if($availableMonths->isNotEmpty())
-                        <form method="POST" action="{{ route('enrollments.store') }}" class="mt-4 space-y-3">
+                        <form method="POST" action="{{ route('enrollments.store') }}" class="mt-4 space-y-3"
+                            x-data="monthSelector()"
+                            x-init='init(@json($availableMonths->map(fn ($m) => ['id' => $m->id, 'name' => $m->name])->values()->all(), JSON_UNESCAPED_UNICODE), @js((float) $course->price))'>
                             @csrf
                             <input type="hidden" name="course_id" value="{{ $course->id }}">
-                            <select name="course_month_id" required
-                                class="w-full rounded-xl border-0 bg-white/95 px-4 py-2.5 text-sm font-medium text-gray-700 shadow-sm transition-all duration-300 ease-in-out focus:ring-2 focus:ring-white/60">
-                                <option value="" disabled @selected(! old('course_month_id'))>Select a month…</option>
-                                @foreach($availableMonths as $month)
-                                    <option value="{{ $month->id }}" @selected(old('course_month_id') == $month->id)>{{ $month->name }}</option>
-                                @endforeach
-                            </select>
+
+                            <div class="space-y-2">
+                                <template x-for="m in months" :key="m.id">
+                                    <label class="flex cursor-pointer items-center justify-between gap-2 rounded-xl bg-white/95 px-3 py-2.5 text-sm font-medium text-gray-700 shadow-sm transition-colors hover:bg-white/80"
+                                        :class="selected.includes(m.id) ? 'ring-2 ring-white/70' : ''">
+                                        <span class="flex min-w-0 items-center gap-2">
+                                            <input type="checkbox" :value="m.id"
+                                                @change="toggle(m.id)"
+                                                :checked="selected.includes(m.id)"
+                                                name="course_month_ids[]"
+                                                class="h-4 w-4 rounded border-indigo-300 text-indigo-600 focus:ring-indigo-500">
+                                            <span class="truncate" x-text="m.name"></span>
+                                        </span>
+                                        <span class="shrink-0 font-mono text-xs text-gray-500" x-text="priceText"></span>
+                                    </label>
+                                </template>
+                            </div>
+
+                            {{-- Reactive total --}}
+                            <div x-show="selected.length > 0" x-cloak x-transition
+                                class="rounded-xl bg-white/95 p-3 text-sm shadow-sm">
+                                <div class="flex items-center justify-between text-xs text-gray-500">
+                                    <span>{{ __('Selected months') }}</span>
+                                    <span><span x-text="selected.length"></span> × <span x-text="priceText"></span></span>
+                                </div>
+                                <div class="mt-1 flex items-center justify-between font-bold text-indigo-800">
+                                    <span>{{ __('Total') }}</span>
+                                    <span class="font-mono text-lg" x-text="totalText"></span>
+                                </div>
+                            </div>
+
                             <button type="submit"
-                                class="w-full rounded-xl bg-white px-4 py-2.5 text-sm font-bold text-indigo-700 shadow-md transition-all duration-300 ease-in-out hover:scale-[1.03] hover:shadow-xl">
-                                Subscribe to Month
+                                class="w-full rounded-xl bg-white px-4 py-2.5 text-sm font-bold text-indigo-700 shadow-md transition-all duration-300 ease-in-out hover:scale-[1.03] hover:shadow-xl"
+                                :disabled="selected.length === 0"
+                                :class="selected.length === 0 ? 'cursor-not-allowed opacity-60' : ''">
+                                {{ __('Subscribe to Month') }}
                             </button>
-                            @error('course_month_id')
+
+                            <p x-show="selected.length === 0" class="text-center text-xs text-indigo-100">
+                                {{ __('Choose at least one month to continue.') }}
+                            </p>
+                            @error('course_month_ids')
                                 <div class="text-xs text-rose-200">{{ $message }}</div>
                             @enderror
                         </form>
                     @else
                         <div class="mt-4 flex items-center gap-2 rounded-xl bg-emerald-400/20 px-4 py-3 text-sm font-medium text-emerald-50">
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="h-5 w-5 shrink-0"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" /></svg>
-                            You've requested all available months.
+                            {{ __("You've requested all available months.") }}
                         </div>
                     @endif
                 @elseif(! $hasActiveSubscription)
                     {{-- Lifetime course: standard full-course enrollment. --}}
                     <a href="{{ route('payments.checkout', $course) }}"
                         class="mt-4 block w-full rounded-xl bg-white px-4 py-2.5 text-center text-sm font-bold text-indigo-700 shadow-md transition-all duration-300 ease-in-out hover:scale-[1.03] hover:shadow-xl">
-                        {{ $enrollment?->isExpired() ? 'جدد الاشتراك' : 'Enroll in Full Course' }}
+                        {{ $enrollment?->isExpired() ? __('Renew Subscription') : __('Enroll in Full Course') }}
                     </a>
                 @else
                     <div class="mt-4 flex items-center gap-2 rounded-xl bg-emerald-400/20 px-4 py-3 text-sm font-medium text-emerald-50">
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="h-5 w-5 shrink-0"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" /></svg>
-                        You're subscribed — enjoy the course!
+                        {{ __("You're subscribed — enjoy the course!") }}
                     </div>
                 @endif
             </div>
         </div>
     </div>
 </div>
-
-{{-- ── Flash alerts ───────────────────────────────────────────── --}}
-@if(session('status'))
-    <div class="mb-6 flex items-center gap-3 rounded-2xl border border-emerald-200 bg-emerald-50 px-5 py-4 text-sm text-emerald-800 shadow-sm dark:border-emerald-500/20 dark:bg-emerald-500/10 dark:text-emerald-300">
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="h-5 w-5 shrink-0"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" /></svg>
-        <span dir="auto">{{ session('status') }}</span>
-    </div>
-@endif
-
-@if(session('error'))
-    <div class="mb-6 flex items-center gap-3 rounded-2xl border border-rose-200 bg-rose-50 px-5 py-4 text-sm text-rose-700 shadow-sm dark:border-rose-500/20 dark:bg-rose-500/10 dark:text-rose-300">
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="h-5 w-5 shrink-0"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" /></svg>
-        <span dir="auto">{{ session('error') }}</span>
-    </div>
-@endif
 
 @if($enrollment && $enrollment->isExpired())
     <div class="mb-6 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-rose-200 bg-rose-50 px-5 py-4 text-sm shadow-sm dark:border-rose-500/20 dark:bg-rose-500/10" dir="rtl">
@@ -111,14 +140,14 @@
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="h-5 w-5"><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z" /></svg>
             </span>
             <div>
-                <span class="font-semibold text-rose-700 dark:text-rose-300">انتهى اشتراكك في هذا الكورس.</span>
+                <span class="font-semibold text-rose-700 dark:text-rose-300">{{ __('Your subscription to this course has expired.') }}</span>
                 <span class="text-rose-600/80 dark:text-rose-300/70">
-                    انتهت صلاحية وصولك في {{ $enrollment->expires_at->format('Y-m-d') }}. جدد اشتراكك لمتابعة الدروس والاختبارات.
+                    {{ __('Your access expired on :date. Renew your subscription to continue lessons and quizzes.', ['date' => $enrollment->expires_at->format('Y-m-d')]) }}
                 </span>
             </div>
         </div>
         <a href="{{ route('payments.checkout', $course) }}"
-            class="rounded-xl bg-rose-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition-all duration-300 ease-in-out hover:scale-[1.03] hover:bg-rose-500">جدد اشتراكك</a>
+            class="rounded-xl bg-rose-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition-all duration-300 ease-in-out hover:scale-[1.03] hover:bg-rose-500">{{ __('Renew Subscription') }}</a>
     </div>
 @endif
 
@@ -130,17 +159,14 @@
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="h-5 w-5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" /></svg>
             </span>
             <div>
-                <div class="font-semibold text-amber-800 dark:text-amber-300">Payment under review</div>
+                <div class="font-semibold text-amber-800 dark:text-amber-300">{{ __('Payment under review') }}</div>
                 <div class="text-amber-700/80 dark:text-amber-300/70">
-                    You have a pending payment.
-                    @if($pendingPayment->fawry_reference_number)
-                        Fawry reference: <span class="font-mono font-bold">{{ $pendingPayment->fawry_reference_number }}</span>
-                    @endif
+                    {{ __('You have a pending payment.') }}
                 </div>
             </div>
         </div>
         <a class="rounded-xl bg-amber-500/10 px-4 py-2 font-semibold text-amber-700 transition-all duration-300 ease-in-out hover:bg-amber-500/20 dark:text-amber-300"
-            href="{{ route('payments.show', $pendingPayment) }}">View details →</a>
+            href="{{ route('payments.show', $pendingPayment) }}">{{ __('View details →') }}</a>
     </div>
 @endif
 
@@ -151,11 +177,11 @@
         <div class="flex items-center gap-3">
             <span class="flex h-11 w-11 items-center justify-center rounded-full bg-emerald-500 text-xl text-white shadow-md shadow-emerald-500/30 transition-transform duration-300 group-hover:scale-110">💬</span>
             <div>
-                <div class="font-semibold text-emerald-700 dark:text-emerald-400">Join the WhatsApp Group</div>
-                <div class="text-xs text-emerald-600/80 dark:text-emerald-400/70">Exclusive for subscribed students — announcements &amp; support</div>
+                <div class="font-semibold text-emerald-700 dark:text-emerald-400">{{ __('Join the WhatsApp Group') }}</div>
+                <div class="text-xs text-emerald-600/80 dark:text-emerald-400/70">{{ __('Exclusive for subscribed students — announcements & support') }}</div>
             </div>
         </div>
-        <span class="rounded-xl bg-emerald-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition-all duration-300 ease-in-out group-hover:scale-105 group-hover:bg-emerald-500">Join →</span>
+        <span class="rounded-xl bg-emerald-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition-all duration-300 ease-in-out group-hover:scale-105 group-hover:bg-emerald-500">{{ __('Join →') }}</span>
     </a>
 @endif
 
@@ -164,7 +190,7 @@
     <div class="mb-8 rounded-2xl border border-gray-100 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900">
         <h2 class="mb-2 flex items-center gap-2 font-semibold text-gray-900 dark:text-gray-100">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="h-5 w-5 text-indigo-500"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6.042A8.967 8.967 0 0 0 6 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 0 1 6 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 0 1 6-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0 0 18 18a8.967 8.967 0 0 0-6 2.292m0-14.25v14.25" /></svg>
-            About this course
+            {{ __('About this course') }}
         </h2>
         <div class="text-sm leading-relaxed text-gray-600 dark:text-gray-300">{!! nl2br(e($course->description)) !!}</div>
     </div>
@@ -175,8 +201,8 @@
     <span class="flex h-8 w-8 items-center justify-center rounded-xl bg-indigo-100 text-indigo-600 dark:bg-indigo-500/10 dark:text-indigo-400">
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="h-5 w-5"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6A2.25 2.25 0 0 1 6 3.75h2.25A2.25 2.25 0 0 1 10.5 6v2.25a2.25 2.25 0 0 1-2.25 2.25H6a2.25 2.25 0 0 1-2.25-2.25V6ZM3.75 15.75A2.25 2.25 0 0 1 6 13.5h2.25a2.25 2.25 0 0 1 2.25 2.25V18a2.25 2.25 0 0 1-2.25 2.25H6A2.25 2.25 0 0 1 3.75 18v-2.25ZM13.5 6a2.25 2.25 0 0 1 2.25-2.25H18A2.25 2.25 0 0 1 20.25 6v2.25A2.25 2.25 0 0 1 18 10.5h-2.25a2.25 2.25 0 0 1-2.25-2.25V6ZM13.5 15.75a2.25 2.25 0 0 1 2.25-2.25H18a2.25 2.25 0 0 1 2.25 2.25V18A2.25 2.25 0 0 1 18 20.25h-2.25A2.25 2.25 0 0 1 13.5 18v-2.25Z" /></svg>
     </span>
-    <h2 class="text-lg font-bold">Course Content</h2>
-    <span class="text-sm text-gray-400">· {{ $lessonCount }} lessons</span>
+    <h2 class="text-lg font-bold">{{ __('Course Content') }}</h2>
+    <span class="text-sm text-gray-400">· {{ __(':count lessons', ['count' => $lessonCount]) }}</span>
 </div>
 
 @if($isPerMonth)
@@ -203,12 +229,12 @@
                         @if($monthApproved)
                             <span class="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400">
                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="h-3.5 w-3.5"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" /></svg>
-                                Subscribed
+                                {{ __('Subscribed') }}
                             </span>
                         @else
                             <span class="inline-flex items-center gap-1 rounded-full bg-gray-100 px-3 py-1 text-xs font-semibold text-gray-500 dark:bg-gray-800 dark:text-gray-400">
                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="h-3.5 w-3.5"><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z" /></svg>
-                                Locked
+                                {{ __('Locked') }}
                             </span>
                         @endif
                         <span data-chevron class="text-gray-400 transition-transform duration-300 ease-in-out {{ $isOpen ? 'rotate-180' : '' }}">
@@ -237,26 +263,26 @@
                                                 <a class="block truncate text-sm font-medium text-gray-700 transition-colors duration-200 hover:text-indigo-600 dark:text-gray-200 dark:hover:text-indigo-400" href="{{ route('lessons.show', $lesson) }}">{{ $lesson->title }}</a>
                                             @endif
                                             @if($lesson->is_free)
-                                                <span class="mt-0.5 inline-flex items-center rounded-full bg-sky-100 px-2 py-0.5 text-[11px] font-medium text-sky-700 dark:bg-sky-500/10 dark:text-sky-400">Free preview</span>
+                                                <span class="mt-0.5 inline-flex items-center rounded-full bg-sky-100 px-2 py-0.5 text-[11px] font-medium text-sky-700 dark:bg-sky-500/10 dark:text-sky-400">{{ __('Free preview') }}</span>
                                             @endif
                                         </div>
                                     </div>
                                     @if($lesson->duration_minutes)
                                         <span class="flex shrink-0 items-center gap-1 text-xs text-gray-400">
                                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="h-3.5 w-3.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" /></svg>
-                                            {{ $lesson->duration_minutes }} min
+                                            {{ $lesson->duration_minutes }} {{ __('min') }}
                                         </span>
                                     @endif
                                 </div>
                             @empty
-                                <div class="px-3 py-4 text-sm text-gray-400">No lessons in this month yet.</div>
+                                <div class="px-3 py-4 text-sm text-gray-400">{{ __('No lessons in this month yet.') }}</div>
                             @endforelse
                         </div>
                     </div>
                 </div>
             </div>
         @empty
-            <div class="rounded-2xl border border-dashed border-gray-200 bg-white px-5 py-10 text-center text-sm text-gray-400 dark:border-gray-800 dark:bg-gray-900">No months available yet.</div>
+            <div class="rounded-2xl border border-dashed border-gray-200 bg-white px-5 py-10 text-center text-sm text-gray-400 dark:border-gray-800 dark:bg-gray-900">{{ __('No months available yet.') }}</div>
         @endforelse
     </div>
 @else
@@ -280,19 +306,19 @@
                             <a class="block truncate text-sm font-medium text-gray-700 transition-colors duration-200 hover:text-indigo-600 dark:text-gray-200 dark:hover:text-indigo-400" href="{{ route('lessons.show', $lesson) }}">{{ $lesson->title }}</a>
                         @endif
                         @if($lesson->is_free)
-                            <span class="mt-0.5 inline-flex items-center rounded-full bg-sky-100 px-2 py-0.5 text-[11px] font-medium text-sky-700 dark:bg-sky-500/10 dark:text-sky-400">Free preview</span>
+                            <span class="mt-0.5 inline-flex items-center rounded-full bg-sky-100 px-2 py-0.5 text-[11px] font-medium text-sky-700 dark:bg-sky-500/10 dark:text-sky-400">{{ __('Free preview') }}</span>
                         @endif
                     </div>
                 </div>
                 @if($lesson->duration_minutes)
                     <span class="flex shrink-0 items-center gap-1 text-xs text-gray-400">
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="h-3.5 w-3.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" /></svg>
-                        {{ $lesson->duration_minutes }} min
+                        {{ $lesson->duration_minutes }} {{ __('min') }}
                     </span>
                 @endif
             </div>
         @empty
-            <div class="px-3 py-4 text-sm text-gray-400">No lessons yet.</div>
+            <div class="px-3 py-4 text-sm text-gray-400">{{ __('No lessons yet.') }}</div>
         @endforelse
     </div>
 @endif
@@ -312,6 +338,38 @@
                 chevron.classList.toggle('rotate-180', ! isOpen);
             }
         });
+    });
+</script>
+
+{{-- Reactive multi-month price selector --}}
+<script>
+    document.addEventListener('alpine:init', () => {
+        Alpine.data('monthSelector', () => ({
+            months: [],
+            price: 0,
+            selected: [],
+            init(months, price) {
+                this.months = months;
+                this.price = price;
+            },
+            toggle(id) {
+                const i = this.selected.indexOf(id);
+                if (i === -1) {
+                    this.selected.push(id);
+                } else {
+                    this.selected.splice(i, 1);
+                }
+            },
+            format(value) {
+                return new Intl.NumberFormat('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(value);
+            },
+            get priceText() {
+                return this.format(this.price) + ' EGP';
+            },
+            get totalText() {
+                return this.format(this.price * this.selected.length) + ' EGP';
+            },
+        }));
     });
 </script>
 @endsection

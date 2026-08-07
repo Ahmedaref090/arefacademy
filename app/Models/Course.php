@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Enums\GradeLevel;
 use App\Enums\PricingType;
+use App\Models\Concerns\HasTranslations;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -12,6 +13,10 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class Course extends Model
 {
     use HasFactory;
+    use HasTranslations;
+
+    /** Columns stored as translatable JSON objects ({ar, en}). */
+    public array $translatable = ['title', 'description'];
 
     protected $fillable = [
         'title', 'slug', 'description', 'price', 'sale_price', 'duration_weeks',
@@ -22,12 +27,24 @@ class Course extends Model
     protected function casts(): array
     {
         return [
+            'title' => 'array',
+            'description' => 'array',
             'price' => 'decimal:2',
             'sale_price' => 'decimal:2',
             'is_published' => 'boolean',
             'grade_level' => GradeLevel::class,
             'pricing_type' => PricingType::class,
         ];
+    }
+
+    public function getTitleAttribute(): string
+    {
+        return $this->getTranslation('title');
+    }
+
+    public function getDescriptionAttribute(): string
+    {
+        return $this->getTranslation('description');
     }
 
     /**
@@ -98,15 +115,18 @@ class Course extends Model
             ->withTimestamps();
     }
 
-    public function progressFor(User $user): int
+    public function progressFor(User $user, ?CourseMonth $month = null): int
     {
-        $total = $this->lessons()->count();
+        $lessons = $this->lessons()
+            ->when($month, fn ($q) => $q->where('course_month_id', $month->id));
+
+        $total = (clone $lessons)->count();
 
         if ($total === 0) {
             return 0;
         }
 
-        $completed = $this->lessons()
+        $completed = (clone $lessons)
             ->whereHas('completedByUsers', fn ($q) => $q
                 ->where('users.id', $user->id)
                 ->whereNotNull('lesson_user.completed_at'))

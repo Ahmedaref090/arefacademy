@@ -1,11 +1,11 @@
 @php
     $u = auth()->user();
     $items = [
-        ['key' => 'profile',     'label' => 'Profile',                  'desc' => 'Personal info & photo',  'route' => 'profile.edit',        'pattern' => 'profile.*'],
-        ['key' => 'security',    'label' => 'Security & Login History', 'desc' => 'Password & devices',     'route' => 'account.security',    'pattern' => 'account.security'],
-        ['key' => 'exams',       'label' => 'Exam Results',             'desc' => 'Quiz scores & reviews',  'route' => 'account.exams',       'pattern' => 'account.exams'],
-        ['key' => 'assignments', 'label' => 'Assignment Results',       'desc' => 'Grades & feedback',      'route' => 'account.assignments', 'pattern' => 'account.assignments'],
-        ['key' => 'videos',      'label' => 'Video Views',              'desc' => 'Watch history',          'route' => 'account.videos',      'pattern' => 'account.videos'],
+        ['key' => 'profile',     'label' => __('Profile'),                  'desc' => __('Personal info & photo'),  'route' => 'profile.edit',        'pattern' => 'profile.*'],
+        ['key' => 'security',    'label' => __('Security & Login History'), 'desc' => __('Password & devices'),     'route' => 'account.security',    'pattern' => 'account.security'],
+        ['key' => 'exam',        'label' => __('Exam Results'),             'desc' => __('Quiz scores & reviews'),  'route' => 'account.exams',       'pattern' => 'account.exams'],
+        ['key' => 'assignment', 'label' => __('Assignment Results'),       'desc' => __('Grades & feedback'),      'route' => 'account.assignments', 'pattern' => 'account.assignments'],
+        ['key' => 'video',      'label' => __('Video Views'),              'desc' => __('Watch history'),          'route' => 'account.videos',      'pattern' => 'account.videos'],
     ];
 @endphp
 
@@ -43,7 +43,7 @@
                              {{ $active
                                    ? 'bg-emerald-500 text-white shadow-sm shadow-emerald-500/30'
                                    : 'bg-gray-100 text-gray-500 group-hover:bg-white group-hover:text-emerald-600 dark:bg-gray-800 dark:text-gray-400 dark:group-hover:bg-gray-700 dark:group-hover:text-emerald-400' }}">
-                    @include('student.account._icon', ['name' => $item['key']])
+                    <x-icon :name="$item['key']" class="h-5 w-5" />
                 </span>
 
                 {{-- Label + description --}}

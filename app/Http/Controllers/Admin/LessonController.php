@@ -16,7 +16,7 @@ class LessonController extends Controller
     {
         return view('admin.lessons.create', [
             'course' => $course,
-            'lesson' => new Lesson(),
+            'lesson' => new Lesson,
             // Dropdown of months — only populated for per-month courses.
             'months' => $course->months,
         ]);
@@ -25,12 +25,14 @@ class LessonController extends Controller
     public function store(Request $request, Course $course)
     {
         $data = $this->validateLesson($request, $course);
+        $data['title'] = $this->translationsFrom($data, 'title');
+        $data['description'] = $this->translationsFrom($data, 'description');
         $data['is_free'] = $request->boolean('is_free');
 
         $lesson = $course->lessons()->create($data);
         $this->syncAttachments($request, $lesson);
 
-        return redirect()->route('admin.courses.edit', $course)->with('status', 'Lesson added.');
+        return redirect()->route('admin.courses.edit', $course)->with('status', __('Lesson added.'));
     }
 
     public function edit(Lesson $lesson)
@@ -39,6 +41,7 @@ class LessonController extends Controller
 
         return view('admin.lessons.edit', [
             'lesson' => $lesson,
+            'course' => $lesson->course,
             'months' => $lesson->course->months,
         ]);
     }
@@ -46,12 +49,14 @@ class LessonController extends Controller
     public function update(Request $request, Lesson $lesson)
     {
         $data = $this->validateLesson($request, $lesson->course);
+        $data['title'] = $this->translationsFrom($data, 'title');
+        $data['description'] = $this->translationsFrom($data, 'description');
         $data['is_free'] = $request->boolean('is_free');
 
         $lesson->update($data);
         $this->syncAttachments($request, $lesson);
 
-        return back()->with('status', 'Lesson updated.');
+        return back()->with('status', __('Lesson updated.'));
     }
 
     public function destroy(Lesson $lesson)
@@ -66,7 +71,7 @@ class LessonController extends Controller
 
         $lesson->delete();
 
-        return redirect()->route('admin.courses.edit', $course)->with('status', 'Lesson deleted.');
+        return redirect()->route('admin.courses.edit', $course)->with('status', __('Lesson deleted.'));
     }
 
     public function destroyAttachment(Attachment $attachment)
@@ -74,14 +79,16 @@ class LessonController extends Controller
         Storage::disk('local')->delete($attachment->file_path);
         $attachment->delete();
 
-        return back()->with('status', 'Attachment deleted.');
+        return back()->with('status', __('Attachment deleted.'));
     }
 
     protected function validateLesson(Request $request, Course $course): array
     {
         return $request->validate([
-            'title' => ['required', 'string', 'max:255'],
-            'description' => ['nullable', 'string'],
+            'title_ar' => ['required', 'string', 'max:255'],
+            'title_en' => ['nullable', 'string', 'max:255'],
+            'description_ar' => ['nullable', 'string'],
+            'description_en' => ['nullable', 'string'],
             'video_url' => ['nullable', 'url', 'max:255'],
             // Videos are NOT uploaded through the app (multi-GB files break
             // HTTP uploads). The admin places the file on the server manually
@@ -101,6 +108,22 @@ class LessonController extends Controller
             'attachments' => ['nullable', 'array'],
             'attachments.*' => ['file', 'max:20480'],
         ]);
+    }
+
+    /**
+     * Turn flat "<column>_ar"/"<column>_en" request data into a translatable
+     * {ar, en} array, removing the flat keys from the payload.
+     */
+    protected function translationsFrom(array &$data, string $column): array
+    {
+        $translations = [
+            'ar' => $data["{$column}_ar"] ?? '',
+            'en' => $data["{$column}_en"] ?? '',
+        ];
+
+        unset($data["{$column}_ar"], $data["{$column}_en"]);
+
+        return $translations;
     }
 
     /**

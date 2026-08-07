@@ -25,13 +25,13 @@ class PaymentController extends Controller
             ? $request->string('status')->toString()
             : PaymentStatus::Pending->value;
 
-        $payments = Payment::with('user', 'course', 'courseMonth')
+        $payments = Payment::with('user', 'course', 'courseMonth', 'courseMonths')
             ->when($status === 'history', fn ($q) => $q->reviewed())
             ->when($status !== '' && $status !== 'history', fn ($q) => $q->where('status', $status))
             ->when($request->filled('course'), fn ($q) => $q
                 ->where('course_id', $request->integer('course')))
             ->when($request->filled('search'), function ($q) use ($request) {
-                $term = '%' . $request->string('search')->toString() . '%';
+                $term = '%'.$request->string('search')->toString().'%';
                 $q->where(function ($s) use ($term) {
                     $s->where('sender_details', 'like', $term)
                         ->orWhereHas('user', fn ($u) => $u
@@ -54,9 +54,10 @@ class PaymentController extends Controller
      * Approve a pending manual payment. The payment record is KEPT (never
      * deleted) — it becomes part of the payment history log.
      *
-     * - Month payment (per-month course): the course_month_user pivot flips
-     *   to "approved", which unlocks that month's lessons and makes the
-     *   course appear in the student's "My Courses".
+     * - Month payment(s) (per-month course): the course_month_user pivot flips
+     *   to "approved" for EVERY month covered by this receipt, which unlocks
+     *   those months' lessons and makes the course appear in the student's
+     *   "My Courses".
      * - Full-course payment (lifetime): the enrollment is activated for
      *   30 days as before.
      */
@@ -72,17 +73,21 @@ class PaymentController extends Controller
                 'reviewed_at' => now(),
             ]);
 
-            if ($payment->course_month_id) {
-                $payment->user->courseMonths()->syncWithoutDetaching([
-                    $payment->course_month_id => ['status' => PurchaseStatus::Approved],
-                ]);
+            $months = $payment->displayMonths();
+
+            if ($months->isNotEmpty()) {
+                foreach ($months as $month) {
+                    $payment->user->courseMonths()->syncWithoutDetaching([
+                        $month->id => ['status' => PurchaseStatus::Approved],
+                    ]);
+                }
             } else {
                 // Sets the enrollment to active with expires_at = now + 30 days.
                 $payment->enrollment?->activate();
             }
         });
 
-        return back()->with('status', 'Payment approved — 30-day subscription activated.');
+        return back()->with('status', __('Payment approved — 30-day subscription activated.'));
     }
 
     /**
@@ -104,14 +109,14 @@ class PaymentController extends Controller
             'reviewed_at' => now(),
         ]);
 
-        // Month payment rejected: flip the pivot to "rejected" so the month
-        // becomes available again in the course page dropdown.
-        if ($payment->course_month_id) {
+        // Month payment(s) rejected: flip the pivot to "rejected" so the months
+        // become available again in the course page dropdown.
+        foreach ($payment->displayMonths() as $month) {
             $payment->user->courseMonths()->syncWithoutDetaching([
-                $payment->course_month_id => ['status' => PurchaseStatus::Rejected],
+                $month->id => ['status' => PurchaseStatus::Rejected],
             ]);
         }
 
-        return back()->with('status', 'Payment rejected.');
+        return back()->with('status', __('Payment rejected.'));
     }
 }

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\HasTranslations;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -10,11 +11,33 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class Quiz extends Model
 {
     use HasFactory;
+    use HasTranslations;
+
+    /** Columns stored as translatable JSON objects ({ar, en}). */
+    public array $translatable = ['title', 'description'];
 
     protected $fillable = [
         'lesson_id', 'title', 'description', 'pass_score',
         'time_limit_minutes', 'max_attempts',
     ];
+
+    protected function casts(): array
+    {
+        return [
+            'title' => 'array',
+            'description' => 'array',
+        ];
+    }
+
+    public function getTitleAttribute(): string
+    {
+        return $this->getTranslation('title');
+    }
+
+    public function getDescriptionAttribute(): string
+    {
+        return $this->getTranslation('description');
+    }
 
     public function lesson(): BelongsTo
     {

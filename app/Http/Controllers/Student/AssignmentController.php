@@ -15,11 +15,11 @@ class AssignmentController extends Controller
     {
         $user = $request->user();
 
-        abort_unless($user->isEnrolledIn($assignment->lesson->course) || $assignment->lesson->is_free, 403);
+        abort_unless($user->canAccessLesson($assignment->lesson), 403);
 
         // Lock: once a submission exists, the student cannot resubmit or modify it.
         if ($assignment->submissionFor($user)) {
-            return back()->withErrors(['file' => 'You have already submitted this assignment.']);
+            return back()->withErrors(['file' => __('You have already submitted this assignment.')]);
         }
 
         $data = $request->validate([
@@ -28,7 +28,7 @@ class AssignmentController extends Controller
         ]);
 
         if (! $request->hasFile('file') && blank($data['code'] ?? null)) {
-            return back()->withErrors(['file' => 'Upload a file or paste your code.']);
+            return back()->withErrors(['file' => __('Upload a file or paste your code.')]);
         }
 
         // Submissions are PRIVATE — students download their own via
@@ -44,7 +44,7 @@ class AssignmentController extends Controller
             'code' => $data['code'] ?? null,
         ]);
 
-        return back()->with('status', 'Assignment submitted.');
+        return back()->with('status', __('Assignment submitted.'));
     }
 
     /**

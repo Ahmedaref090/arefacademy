@@ -66,7 +66,7 @@ class QuizController extends Controller
 
         if ($quiz->attemptsLeftFor($user) === 0) {
             return redirect()->route('quizzes.show', $quiz)
-                ->withErrors(['quiz' => 'You have used all allowed attempts for this quiz.']);
+                ->withErrors(['quiz' => __('You have used all allowed attempts for this quiz.')]);
         }
 
         QuizAttempt::create([
@@ -213,6 +213,6 @@ class QuizController extends Controller
 
     protected function authorizeAccess(User $user, Quiz $quiz): void
     {
-        abort_unless($user->isEnrolledIn($quiz->lesson->course) || $quiz->lesson->is_free, 403);
+        abort_unless($user->canAccessLesson($quiz->lesson), 403);
     }
 }

@@ -6,6 +6,8 @@ use App\Enums\GradeLevel;
 use App\Enums\UserRole;
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Rules\FullName;
+use App\Rules\Phone;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
@@ -23,14 +25,20 @@ class RegisteredStudentController extends Controller
 
     public function store(Request $request)
     {
-        $data = $request->validate([
-            'name' => ['required', 'string', 'max:255'],
-            'phone' => ['required', 'string', 'max:20', 'unique:users,phone'],
-            'parent_phone' => ['nullable', 'string', 'max:20'],
-            'governorate' => ['required', Rule::in(config('governorates'))],
-            'grade_level' => ['required', Rule::enum(GradeLevel::class)],
-            'password' => ['required', 'confirmed', Password::min(8)],
-        ]);
+        $data = $request->validate(
+            [
+                'name' => ['required', 'string', new FullName, 'max:255'],
+                'phone' => ['required', new Phone, 'unique:users,phone'],
+                'parent_phone' => ['nullable', new Phone],
+                'governorate' => ['required', Rule::in(config('governorates'))],
+                'grade_level' => ['required', Rule::enum(GradeLevel::class)],
+                'password' => ['required', 'confirmed', Password::min(8)],
+            ],
+            [
+                'phone.unique' => __('This phone number is already registered. Please log in instead, or use a different number.'),
+                'password.confirmed' => __('Passwords do not match. Please make sure they are identical.'),
+            ]
+        );
 
         $user = User::create([
             'name' => $data['name'],

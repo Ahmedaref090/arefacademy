@@ -35,7 +35,7 @@ class PurchaseRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'course_month_id.required' => 'Please select the month you want to subscribe to.',
+            'course_month_id.required' => __('Please select the month you want to subscribe to.'),
         ];
     }
 
@@ -63,7 +63,7 @@ class PurchaseRequest extends FormRequest
                 if (in_array($status, [PurchaseStatus::Approved, PurchaseStatus::Pending], true)) {
                     $validator->errors()->add(
                         'course_month_id',
-                        'You have already purchased this month or your request is pending.'
+                        __('You have already purchased this month or your request is pending.')
                     );
                 }
             } else {
@@ -72,7 +72,7 @@ class PurchaseRequest extends FormRequest
                 if (in_array($status, [PurchaseStatus::Approved, PurchaseStatus::Pending], true)) {
                     $validator->errors()->add(
                         'course',
-                        'You have already purchased this course or your request is pending.'
+                        __('You have already purchased this course or your request is pending.')
                     );
                 }
             }

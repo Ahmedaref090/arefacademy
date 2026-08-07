@@ -24,12 +24,12 @@ class PurchaseController extends Controller
             $month = CourseMonth::findOrFail($request->integer('course_month_id'));
             $this->subscribe($user->courseMonths(), $month->id);
 
-            return back()->with('status', "Your request for \"{$month->name}\" has been submitted and is pending approval.");
+            return back()->with('status', __('Your request for ":month" has been submitted and is pending approval.', ['month' => $month->name]));
         }
 
         $this->subscribe($user->purchasedCourses(), $course->id);
 
-        return back()->with('status', 'Your purchase request has been submitted and is pending approval.');
+        return back()->with('status', __('Your purchase request has been submitted and is pending approval.'));
     }
 
     /**

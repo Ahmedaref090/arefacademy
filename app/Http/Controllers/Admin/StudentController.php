@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Enums\EnrollmentStatus;
 use App\Enums\GradeLevel;
+use App\Enums\PurchaseStatus;
 use App\Enums\UserRole;
 use App\Http\Controllers\Controller;
 use App\Models\Course;
@@ -24,7 +25,7 @@ class StudentController extends Controller
             ->when($request->filled('grade'), fn ($q) => $q
                 ->where('grade_level', $request->string('grade')->toString()))
             ->when($request->filled('search'), function ($q) use ($request) {
-                $term = '%' . $request->string('search')->toString() . '%';
+                $term = '%'.$request->string('search')->toString().'%';
                 $q->where(fn ($s) => $s->where('name', 'like', $term)->orWhere('phone', 'like', $term));
             })
             ->withCount('enrollments')
@@ -46,13 +47,28 @@ class StudentController extends Controller
 
         $user->load([
             'enrollments.course.lessons',
+            'enrollments.month',
             'quizAttempts.quiz.lesson.course',
             'submissions.assignment.lesson.course',
+            'devices',
         ]);
+
+        // Approved month subscriptions for THIS student that aren't already
+        // represented by an Enrollment row. These come from the checkout
+        // (receipt → approve) flow and must also be listed & cancellable here.
+        $approvedMonths = $user->courseMonths()
+            ->wherePivot('status', PurchaseStatus::Approved)
+            ->with('course')
+            ->get()
+            ->reject(fn ($month) => $user->enrollments->contains(
+                fn ($e) => $e->course_month_id === $month->id
+            ))
+            ->values();
 
         return view('admin.students.show', [
             'user' => $user,
             'courses' => Course::orderBy('title')->get(),
+            'approvedMonths' => $approvedMonths,
         ]);
     }
 
@@ -70,6 +86,6 @@ class StudentController extends Controller
 
         $user->update(['password' => $data['password']]);
 
-        return back()->with('status', 'Password reset for ' . $user->name . '.');
+        return back()->with('status', __('Password reset for :name.', ['name' => $user->name]));
     }
 }

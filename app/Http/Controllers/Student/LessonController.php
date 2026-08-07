@@ -6,6 +6,7 @@ use App\Enums\PurchaseStatus;
 use App\Http\Controllers\Controller;
 use App\Models\Lesson;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 class LessonController extends Controller
 {
@@ -60,13 +61,49 @@ class LessonController extends Controller
         ]);
     }
 
+    /**
+     * Secure R2 playback: returns a temporary (3-hour) signed URL for the
+     * lesson video. Only students who can access the lesson may request it,
+     * and the bucket stays private otherwise.
+     */
+    public function videoUrl(Request $request, Lesson $lesson)
+    {
+        abort_unless($request->user()->canAccessLesson($lesson), 403);
+        abort_unless($lesson->isStoredOnR2(), 404);
+
+        $disk = Storage::disk('r2');
+
+        if (! $disk->exists($lesson->video_path)) {
+            abort(404);
+        }
+
+        return response()->json([
+            'url' => $disk->temporaryUrl($lesson->video_path, now()->addMinutes(180)),
+            'expires_at' => now()->addMinutes(180)->toIso8601String(),
+        ]);
+    }
+
     public function complete(Request $request, Lesson $lesson)
     {
         abort_unless($request->user()->canAccessLesson($lesson), 403);
 
         $request->user()->markLessonCompleted($lesson);
 
-        return back()->with('status', 'Lesson marked as complete.');
+        if ($request->expectsJson()) {
+            $course = $lesson->course;
+            $total = $course->lessons()->count();
+            $done = $request->user()->completedLessons()
+                ->whereIn('lesson_id', $course->lessons()->pluck('id'))
+                ->count();
+
+            return response()->json([
+                'completed' => true,
+                'lesson_id' => $lesson->id,
+                'progress' => $total > 0 ? (int) round(($done / $total) * 100) : 0,
+            ]);
+        }
+
+        return back()->with('status', __('Lesson marked as complete.'));
     }
 
     /**

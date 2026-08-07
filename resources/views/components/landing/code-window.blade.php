@@ -15,7 +15,7 @@
                 { text: 'while ($student->isLearning()) {', cls: 'text-amber-300' },
                 { text: '    $student->levelUp();', cls: 'text-slate-200' },
                 { text: '}', cls: 'text-amber-300' },
-                { text: '// يلا نبدأ رحلتك 🚀', cls: 'text-emerald-300' },
+                { text: '// ' + @json(__('Let\'s start your journey 🚀')), cls: 'text-emerald-300' },
             ],
             init() {
                 this.type();

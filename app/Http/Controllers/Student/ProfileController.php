@@ -2,9 +2,11 @@
 
 namespace App\Http\Controllers\Student;
 
+use App\Enums\EnrollmentStatus;
 use App\Enums\GradeLevel;
 use App\Enums\PurchaseStatus;
 use App\Http\Controllers\Controller;
+use App\Rules\Phone;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Password;
@@ -24,7 +26,7 @@ class ProfileController extends Controller
     {
         $data = $request->validate([
             'name' => ['required', 'string', 'max:255'],
-            'parent_phone' => ['nullable', 'string', 'max:20'],
+            'parent_phone' => ['nullable', new Phone],
             'governorate' => ['required', Rule::in(config('governorates'))],
             'grade_level' => ['required', Rule::enum(GradeLevel::class)],
             'avatar' => ['nullable', 'image', 'max:2048'],
@@ -47,7 +49,7 @@ class ProfileController extends Controller
 
         $user->save();
 
-        return back()->with('status', 'Profile updated.');
+        return back()->with('status', __('Profile updated.'));
     }
 
     /**
@@ -63,7 +65,7 @@ class ProfileController extends Controller
 
         $request->user()->update(['password' => $data['password']]);
 
-        return back()->with('status', 'Password updated successfully.');
+        return back()->with('status', __('Password updated successfully.'));
     }
 
     /**
@@ -76,7 +78,7 @@ class ProfileController extends Controller
 
         $enrollments = $user->enrollments()
             ->with('course.lessons')
-            ->where('status', \App\Enums\EnrollmentStatus::Active)
+            ->where('status', EnrollmentStatus::Active)
             ->latest('enrolled_at')
             ->get();
 
@@ -87,6 +89,6 @@ class ProfileController extends Controller
             ->sortBy([['course.title', 'asc'], ['sort_order', 'asc']])
             ->values();
 
-        return view('student.profile.courses', compact('enrollments', 'approvedMonths'));
+        return view('student.courses.my', compact('enrollments', 'approvedMonths'));
     }
 }

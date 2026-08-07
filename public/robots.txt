@@ -1,0 +1,16 @@
+User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /account
+Disallow: /profile
+Disallow: /dashboard
+Disallow: /invoices
+Disallow: /payments
+Disallow: /login
+Disallow: /register
+Disallow: /logout
+Disallow: /webhooks/
+Disallow: /up
+Disallow: /storage/private/
+
+Sitemap: https://your-domain.com/sitemap.xml

@@ -2,19 +2,39 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\HasTranslations;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Assignment extends Model
 {
+    use HasTranslations;
+
+    /** Columns stored as translatable JSON objects ({ar, en}). */
+    public array $translatable = ['title', 'description'];
+
     protected $fillable = [
         'lesson_id', 'title', 'description', 'max_score', 'deadline',
     ];
 
     protected function casts(): array
     {
-        return ['deadline' => 'datetime'];
+        return [
+            'title' => 'array',
+            'description' => 'array',
+            'deadline' => 'datetime',
+        ];
+    }
+
+    public function getTitleAttribute(): string
+    {
+        return $this->getTranslation('title');
+    }
+
+    public function getDescriptionAttribute(): string
+    {
+        return $this->getTranslation('description');
     }
 
     public function lesson(): BelongsTo

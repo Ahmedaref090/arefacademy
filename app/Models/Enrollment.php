@@ -10,7 +10,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class Enrollment extends Model
 {
     protected $fillable = [
-        'user_id', 'course_id', 'status', 'enrolled_at', 'expires_at',
+        'user_id', 'course_id', 'course_month_id', 'status', 'enrolled_at', 'expires_at',
     ];
 
     protected function casts(): array
@@ -30,6 +30,11 @@ class Enrollment extends Model
     public function course(): BelongsTo
     {
         return $this->belongsTo(Course::class);
+    }
+
+    public function month(): BelongsTo
+    {
+        return $this->belongsTo(CourseMonth::class, 'course_month_id');
     }
 
     public function scopeActive(Builder $query): Builder
