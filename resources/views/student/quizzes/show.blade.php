@@ -187,6 +187,7 @@
                         icon: 'warning',
                         title: @json(__('quiz_lock_title')),
                         text: @json(__('quiz_lock_message')),
+                        confirmButtonText: @json(__('quiz_lock_ok')),
                         confirmButtonColor: '#6d38f6',
                         allowOutsideClick: false,
                         allowEscapeKey: false,

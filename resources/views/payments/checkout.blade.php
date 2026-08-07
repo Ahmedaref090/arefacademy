@@ -60,7 +60,7 @@
             <div class="grid gap-3 sm:grid-cols-2">
                 <div class="rounded-lg border border-red-200 bg-red-50 p-4 dark:border-red-500/20 dark:bg-red-500/10">
                     <div class="mb-1 font-semibold text-red-700 dark:text-red-400">{{ __('Vodafone Cash') }}</div>
-                    <div class="font-mono text-lg font-bold tracking-wider" dir="ltr">01068014651</div>
+                    <div class="font-mono text-lg font-bold tracking-wider" dir="ltr">01064788073</div>
                 </div>
                 <div class="rounded-lg border border-purple-200 bg-purple-50 p-4 dark:border-purple-500/20 dark:bg-purple-500/10">
                     <div class="mb-1 font-semibold text-purple-700 dark:text-purple-400">{{ __('InstaPay') }}</div>

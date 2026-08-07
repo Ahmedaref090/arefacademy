@@ -10,6 +10,11 @@
             $enrollment = $course->enrollments->first();
             $hasDiscount = ! is_null($course->sale_price) && (float) $course->sale_price < (float) $course->price;
             $effectivePrice = $hasDiscount ? (float) $course->sale_price : (float) $course->price;
+
+            // Per-month courses: the badge follows the approved/pending month
+            // pivots. An approved month must always win over any pending state.
+            $hasApprovedMonth = in_array($course->id, $approvedMonthCourseIds, true);
+            $hasPendingMonth = in_array($course->id, $pendingMonthCourseIds, true);
         @endphp
         <a href="{{ route('courses.show', $course) }}" class="card block hover:border-indigo-500">
             @if($course->thumbnailUrl())
@@ -19,9 +24,9 @@
             @endif
             <div class="mb-1 flex items-center justify-between gap-2">
                 <span class="font-semibold">{{ $course->title }}</span>
-                @if($enrollment?->status === \App\Enums\EnrollmentStatus::Active)
-                    <span class="badge bg-green-100 text-green-700 dark:bg-green-500/10 dark:text-green-400">{{ __('Enrolled') }}</span>
-                @elseif($enrollment)
+                @if($hasApprovedMonth || $enrollment?->status === \App\Enums\EnrollmentStatus::Active)
+                    <span class="badge bg-green-100 text-green-700 dark:bg-green-500/10 dark:text-green-400">{{ __('Subscribed') }}</span>
+                @elseif($hasPendingMonth || $enrollment)
                     <span class="badge bg-amber-100 text-amber-700 dark:bg-amber-500/10 dark:text-amber-400">{{ __('Pending') }}</span>
                 @endif
             </div>

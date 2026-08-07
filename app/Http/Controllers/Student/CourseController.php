@@ -15,11 +15,33 @@ class CourseController extends Controller
 {
     public function index(Request $request)
     {
+        $user = $request->user();
+
         $courses = Course::where('is_published', true)
             ->withCount('lessons')
-            ->with(['enrollments' => fn ($q) => $q->where('user_id', $request->user()->id)])
+            ->with(['enrollments' => fn ($q) => $q
+                ->where('user_id', $user->id)
+                ->whereNull('course_month_id')])
             ->latest()
             ->paginate(12);
+
+        // Approved/pending month subscriptions for THIS user, scoped to the
+        // currently shown courses. For per-month courses these pivots are the
+        // single source of truth for the enrollment badge — an enrollment row
+        // may still read "pending" here even after the admin approved months.
+        $courseIds = $courses->pluck('id');
+
+        $approvedMonthCourseIds = $user->courseMonths()
+            ->wherePivot('status', PurchaseStatus::Approved)
+            ->whereIn('course_months.course_id', $courseIds)
+            ->pluck('course_months.course_id')
+            ->all();
+
+        $pendingMonthCourseIds = $user->courseMonths()
+            ->wherePivot('status', PurchaseStatus::Pending)
+            ->whereIn('course_months.course_id', $courseIds)
+            ->pluck('course_months.course_id')
+            ->all();
 
         // Monthly courses for the dependent Course → Month subscription widget.
         $monthlyCourses = Course::where('is_published', true)
@@ -31,7 +53,12 @@ class CourseController extends Controller
             ->sortBy('title')
             ->values();
 
-        return view('student.courses.index', compact('courses', 'monthlyCourses'));
+        return view('student.courses.index', compact(
+            'courses',
+            'monthlyCourses',
+            'approvedMonthCourseIds',
+            'pendingMonthCourseIds'
+        ));
     }
 
     /**
