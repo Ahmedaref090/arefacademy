@@ -7,7 +7,7 @@
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
     <title>@yield('title', __('Aref Academy'))</title>
     <script>
-        if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+        if (localStorage.getItem('theme') === 'dark') {
             document.documentElement.classList.add('dark');
         }
         function toggleTheme() {
