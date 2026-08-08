@@ -131,6 +131,34 @@
             </form>
         </div>
 
+        <div class="card">
+            <h2 class="mb-3 font-semibold">{{ __('Login Access') }}</h2>
+
+            @if($user->isLoginBlocked())
+                <div class="flex items-start justify-between gap-3">
+                    <div>
+                        <span class="badge bg-red-100 text-red-700 dark:bg-red-500/10 dark:text-red-400">{{ __('Login Blocked') }}</span>
+                        <p class="mt-2 text-sm text-gray-500 dark:text-gray-400">
+                            {{ __('This student cannot log in from any device until you allow them again. Blocked since :date.', ['date' => $user->login_blocked_at->format('Y-m-d H:i')]) }}
+                        </p>
+                    </div>
+                    <form method="POST" action="{{ route('admin.students.login.unblock', $user) }}">
+                        @csrf
+                        <button class="btn">{{ __('Allow Login') }}</button>
+                    </form>
+                </div>
+            @else
+                <p class="text-sm text-gray-500 dark:text-gray-400">
+                    {{ __('This student can log in freely from any device. Blocking is done manually by the admin.') }}
+                </p>
+                <form method="POST" action="{{ route('admin.students.login.block', $user) }}" class="mt-3"
+                    onsubmit="return confirm(@json(__('Prevent this student from logging in? This will end all of their active sessions immediately.')));">
+                    @csrf
+                    <button class="btn-danger">{{ __('Prevent Login') }}</button>
+                </form>
+            @endif
+        </div>
+
         <div class="card p-0" x-data="deviceModal()">
             <h2 class="flex items-center gap-2 border-b border-gray-200 p-4 font-semibold dark:border-gray-800">
                 {{ __('Registered Devices') }}
@@ -178,7 +206,7 @@
                     <div class="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl ring-1 ring-black/10 dark:bg-gray-900 dark:ring-white/10">
                         <h3 class="text-lg font-bold text-gray-900 dark:text-white">{{ __('Remove this device?') }}</h3>
                         <p class="mt-2 text-sm leading-relaxed text-gray-500 dark:text-gray-400">
-                            {{ __('Removing the device frees up one slot so the student can log in from a new device. This action cannot be undone.') }}
+                            {{ __('Removing the device removes it from this student\'s registered devices. This cannot be undone.') }}
                         </p>
                         <div class="mt-5 flex justify-end gap-2">
                             <button type="button" @click="actionUrl = null" class="btn-secondary">{{ __('Cancel') }}</button>

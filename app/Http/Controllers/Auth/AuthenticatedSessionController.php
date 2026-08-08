@@ -16,9 +16,6 @@ class AuthenticatedSessionController extends Controller
     // Long-lived cookie lifetime (minutes) — ~5 years.
     protected const DEVICE_COOKIE_LIFETIME_MINUTES = 60 * 24 * 365 * 5;
 
-    // Maximum distinct devices a user may log in from.
-    protected const MAX_DEVICES = 3;
-
     public function create()
     {
         return view('auth.login');
@@ -39,16 +36,21 @@ class AuthenticatedSessionController extends Controller
 
         $user = $request->user();
 
-        // Enforce the 3-device login limit before the session is finalized.
-        if (! $this->authorizeNewDevice($request, $user)) {
+        // Only the admin can block a student's account (manual "Prevent Login").
+        // Blocked students see the locale-aware message below; admins are never blocked.
+        if ($user->isLoginBlocked()) {
             Auth::logout();
             $request->session()->invalidate();
             $request->session()->regenerateToken();
 
             throw ValidationException::withMessages([
-                'phone' => __('auth.max_devices_reached'),
+                'phone' => __('auth.login_blocked'),
             ]);
         }
+
+        // Track the device (cookie-based). There is no automatic device cap
+        // anymore — admins may use unlimited devices and blocking is manual.
+        $this->registerDevice($request, $user);
 
         $request->session()->regenerate();
 
@@ -75,17 +77,17 @@ class AuthenticatedSessionController extends Controller
     }
 
     /**
-     * Decide whether this device may log in, using the long-lived encrypted
-     * device_uuid cookie. Dynamic IP changes are irrelevant because the
-     * device identity lives in the cookie, not the IP.
+     * Register (or refresh) the device the user is logging in from, using the
+     * long-lived encrypted device_uuid cookie. Dynamic IP changes are
+     * irrelevant because the device identity lives in the cookie, not the IP.
      *
      * - Known cookie (exists in the user's devices): refresh last_active_at.
-     * - Unknown cookie / no cookie, under the 3-device cap: register + issue cookie.
-     * - Unknown cookie / no cookie, at the cap: block the login.
+     * - Unknown cookie / no cookie: register it and issue a new device_uuid.
      *
-     * @return bool True when the device is allowed to log in.
+     * There is no device-count cap anymore: only the admin can block login,
+     * so devices are tracked purely for monitoring on the student profile.
      */
-    protected function authorizeNewDevice(Request $request, User $user): bool
+    protected function registerDevice(Request $request, User $user): void
     {
         $deviceUuid = $request->cookie('device_uuid');
 
@@ -99,12 +101,8 @@ class AuthenticatedSessionController extends Controller
                     'last_active_at' => now(),
                 ]);
 
-                return true;
+                return;
             }
-        }
-
-        if ($user->devices()->count() >= self::MAX_DEVICES) {
-            return false;
         }
 
         $uuid = (string) Str::uuid();
@@ -127,8 +125,6 @@ class AuthenticatedSessionController extends Controller
             false,
             true
         ));
-
-        return true;
     }
 
     protected function deviceNameFrom(Request $request): string

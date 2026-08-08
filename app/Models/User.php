@@ -21,7 +21,7 @@ class User extends Authenticatable
 
     protected $fillable = [
         'name', 'phone', 'parent_phone', 'email', 'avatar',
-        'role', 'governorate', 'grade_level', 'password',
+        'role', 'governorate', 'grade_level', 'password', 'login_blocked_at',
     ];
 
     protected $hidden = [
@@ -35,6 +35,7 @@ class User extends Authenticatable
             'grade_level' => GradeLevel::class,
             'phone_verified_at' => 'datetime',
             'email_verified_at' => 'datetime',
+            'login_blocked_at' => 'datetime',
             'password' => 'hashed',
         ];
     }
@@ -55,6 +56,31 @@ class User extends Authenticatable
     public function isStudent(): bool
     {
         return $this->role === UserRole::Student;
+    }
+
+    /**
+     * True when an admin has manually blocked this account from logging in.
+     * Admin accounts can never be blocked.
+     */
+    public function isLoginBlocked(): bool
+    {
+        return ! $this->isAdmin() && $this->login_blocked_at !== null;
+    }
+
+    /**
+     * Manually block the student from logging in (login blocked by admin).
+     */
+    public function blockLogin(): void
+    {
+        $this->forceFill(['login_blocked_at' => now()])->save();
+    }
+
+    /**
+     * Lift an admin-imposed login block so the student can sign in again.
+     */
+    public function unblockLogin(): void
+    {
+        $this->forceFill(['login_blocked_at' => null])->save();
     }
 
     public function enrollments(): HasMany

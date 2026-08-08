@@ -7,6 +7,7 @@ use App\Models\User;
 use App\Models\UserDevice;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class DeviceController extends Controller
 {
@@ -36,9 +37,9 @@ class DeviceController extends Controller
     }
 
     /**
-     * Revoke a single device session. The row is deleted, which immediately
-     * lowers the student's registered-device count by one, freeing a slot
-     * so they can log in from a new device without the 3-device limit error.
+     * Revoke a single registered device. The row is deleted so the student's
+     * device list stays clean. There is no device-count cap — this is purely
+     * a monitoring/cleanup action.
      */
     public function destroy(Request $request, User $user, UserDevice $device)
     {
@@ -51,6 +52,53 @@ class DeviceController extends Controller
             return response()->json(['success' => true]);
         }
 
-        return back()->with('status', __('Device removed — one device slot freed up.'));
+        return back()->with('status', __('Device removed.'));
+    }
+
+    /**
+     * Manually block a student's account. Once blocked, the student can no
+     * longer log in and sees the locale-aware "maximum devices" message.
+     * Existing sessions are destroyed so the block takes effect immediately.
+     */
+    public function block(Request $request, User $user)
+    {
+        abort_unless($user->isStudent(), 403);
+
+        $user->blockLogin();
+
+        $this->terminateSessions($user);
+
+        return $this->respond($request, __('Login blocked for :name.', ['name' => $user->name]));
+    }
+
+    /**
+     * Lift the manual login block so the student can sign in again.
+     */
+    public function unblock(Request $request, User $user)
+    {
+        abort_unless($user->isStudent(), 403);
+
+        $user->unblockLogin();
+
+        return $this->respond($request, __('Login re-enabled for :name.', ['name' => $user->name]));
+    }
+
+    /**
+     * Terminate every active web session of this student (the sessions are
+     * stored in the database), forcing a fresh login attempt that the
+     * login-block check will reject.
+     */
+    protected function terminateSessions(User $user): void
+    {
+        DB::table('sessions')->where('user_id', $user->id)->delete();
+    }
+
+    protected function respond(Request $request, string $message)
+    {
+        if ($request->expectsJson()) {
+            return response()->json(['success' => true, 'message' => $message]);
+        }
+
+        return back()->with('status', $message);
     }
 }

@@ -120,6 +120,10 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::get('students/{user}/devices', [Admin\DeviceController::class, 'index'])->name('students.devices');
     Route::delete('students/{user}/devices/{device}', [Admin\DeviceController::class, 'destroy'])->name('students.devices.destroy');
 
+    // Manual login control: only the admin can block/unblock a student's account.
+    Route::post('students/{user}/login/block', [Admin\DeviceController::class, 'block'])->name('students.login.block');
+    Route::post('students/{user}/login/unblock', [Admin\DeviceController::class, 'unblock'])->name('students.login.unblock');
+
     Route::get('submissions', [Admin\SubmissionController::class, 'index'])->name('submissions.index');
     Route::post('submissions/{submission}/grade', [Admin\SubmissionController::class, 'grade'])->name('submissions.grade');
 
